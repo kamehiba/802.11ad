@@ -162,8 +162,8 @@ int main (int argc, char *argv[])
 		QosWifiMacHelper mac = QosWifiMacHelper::Default ();
 
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
-		//wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-9));
-		wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate7Gbps"), "RtsCtsThreshold", UintegerValue (0));
+		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-9));
+		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate7Gbps"), "RtsCtsThreshold", UintegerValue (0));
 
 		////video trasmission
 		//mac.SetType ("ns3::AmpduTag");
