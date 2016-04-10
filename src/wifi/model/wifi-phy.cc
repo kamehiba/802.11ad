@@ -272,6 +272,8 @@ WifiPhy::GetPlcpHeaderMode (WifiMode payloadMode, WifiPreamble preamble, WifiTxV
           //(Section 17.2.2.3 "Short PPDU format"; IEEE Std 802.11-2012)
           return WifiPhy::GetDsssRate2Mbps ();
         }
+    case WIFI_MOD_CLASS_80211ad_OFDM:
+    	return WifiPhy::GetOfdmRate700Mbps();
     default:
       NS_FATAL_ERROR ("unsupported modulation class");
       return WifiMode ();
@@ -288,6 +290,7 @@ WifiPhy::GetPlcpHeaderDuration (WifiTxVector txVector, WifiPreamble preamble)
   switch (txVector.GetMode ().GetModulationClass ())
     {
     case WIFI_MOD_CLASS_OFDM:
+    case WIFI_MOD_CLASS_80211ad_OFDM:
       {
         switch (txVector.GetChannelWidth ())
           {
@@ -352,6 +355,7 @@ WifiPhy::GetPlcpPreambleDuration (WifiTxVector txVector, WifiPreamble preamble)
   switch (txVector.GetMode ().GetModulationClass ())
     {
     case WIFI_MOD_CLASS_OFDM:
+    case WIFI_MOD_CLASS_80211ad_OFDM:
       {
         switch (txVector.GetChannelWidth ())
           {
@@ -409,6 +413,7 @@ WifiPhy::GetPayloadDuration (uint32_t size, WifiTxVector txVector, WifiPreamble 
   switch (payloadMode.GetModulationClass ())
     {
     case WIFI_MOD_CLASS_OFDM:
+    case WIFI_MOD_CLASS_80211ad_OFDM:
     case WIFI_MOD_CLASS_ERP_OFDM:
       {
         //(Section 18.3.2.4 "Timing related parameters" Table 18-5 "Timing-related parameters"; IEEE Std 802.11-2012
@@ -1220,144 +1225,144 @@ WifiPhy::GetOfdmRate13_5MbpsBW5MHz ()
 //802.11ad
 
 WifiMode
-WifiPhy::GetOfdmRate700Mbps ()
+WifiPhy::GetOfdmRate700Mbps () //MCS 13
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate700Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     true, //OFDM MCS13-17 mandatory
                                      WIFI_CODE_RATE_1_2,
                                      2);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate900Mbps ()
+WifiPhy::GetOfdmRate900Mbps () //MCS 14
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate900Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     true, //OFDM MCS13-17 mandatory
                                      WIFI_CODE_RATE_5_8,
                                      2);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1400Mbps ()
+WifiPhy::GetOfdmRate1400Mbps () //MCS 15
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1400Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     true, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_1_2,
                                      4);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1700Mbps ()
+WifiPhy::GetOfdmRate1700Mbps () //MCS 16
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1700Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     true, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_5_8,
                                      4);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2Gbps ()
+WifiPhy::GetOfdmRate2Gbps () //MCS 17
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2Gbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     true, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_3_4,
                                      4);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2700Mbps ()
+WifiPhy::GetOfdmRate2700Mbps () //MCS 18
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2700Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_1_2,
                                      16);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate3400Mbps ()
+WifiPhy::GetOfdmRate3400Mbps () //MCS 19
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate3400Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_5_8,
                                      16);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4200Mbps ()
+WifiPhy::GetOfdmRate4200Mbps () //MCS 20
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4200Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_3_4,
                                      16);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4500Mbps ()
+WifiPhy::GetOfdmRate4500Mbps () //MCS 21
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4500Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_13_16,
                                      16);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate5200Mbps ()
+WifiPhy::GetOfdmRate5200Mbps () //MCS 22
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate5200Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_5_8,
                                      64);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate6200Mbps ()
+WifiPhy::GetOfdmRate6200Mbps () //MCS 23
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate6200Mbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
 									 WIFI_CODE_RATE_3_4,
                                      64);
   return mode;
 }
 
 WifiMode
-WifiPhy::GetOfdmRate7Gbps ()
+WifiPhy::GetOfdmRate7Gbps () //MCS 24
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate7Gbps",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
+                                     WIFI_MOD_CLASS_80211ad_OFDM,
+                                     false, //OFDM MCS13-17 mandatory
                                      WIFI_CODE_RATE_13_16,
                                      64);
   return mode;

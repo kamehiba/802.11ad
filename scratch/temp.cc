@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Daniel D. Costa <danieldouradocosta@gmail.com>
+ * Author: Daniel D. Costa <danielcosta@inf.ufg.br>
 
  Default Network Topology
 
@@ -66,11 +66,11 @@ int main (int argc, char *argv[])
 	double wifiServerStartTime		= 0.01;
 	double wifiClientStartTime		= 0.01;
 
-	double distanceXUe				= 20.0;
+	double distanceXUe				= 10.0;
 	double distanceYUe				= 0.0;
 
-	uint16_t dlPort 				= 12345;
-	uint16_t ulPort 				= 9;
+	uint32_t dlPort 				= 12345;
+	uint32_t ulPort 				= 9;
 
 	uint32_t maxTCPBytes 			= 0;
 	double udpPacketInterval 		= 1;
@@ -82,8 +82,11 @@ int main (int argc, char *argv[])
 
 	bool   useappWIFI				= true;
 
+	uint16_t nTransmitedAntennas 	= 1;
+	uint16_t nReceiveAntennas 		= 1;
+
 	std::string outFile ("debug");
-	std::string p2pWifiRate ("100Gbps");
+	std::string p2pWifiRate ("500Gbps");
 
 	CommandLine cmd;
 	cmd.AddValue("simulationTime", "Simulation Time: ", simulationTime);
@@ -106,21 +109,21 @@ int main (int argc, char *argv[])
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
 
 ///////////////////////////////////////////////////////////
-	NS_LOG_LOGIC ("->Initializing Remote Host WIFI (TX1)...");
+	NS_LOG_UNCOND ("->Initializing Remote Host WIFI (TX1)...");
 ///////////////////////////////////////////////////////////
 
-	NS_LOG_LOGIC ("Creating p2pNodes WIFI...");
+	NS_LOG_UNCOND ("Creating p2pNodes WIFI...");
 	NodeContainer remoteHostWIFIContainer;
 	remoteHostWIFIContainer.Create (2);
 
 	internet.Install(remoteHostWIFIContainer); //txNodeWifi and wifiApNode
 
-	NS_LOG_LOGIC ("Creating pointToPoint WIFI...");
+	NS_LOG_UNCOND ("Creating pointToPoint WIFI...");
 	p2p.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (p2pWifiRate)));
-	p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+	p2p.SetChannelAttribute ("Delay", StringValue ("1ms"));
 	p2p.SetDeviceAttribute ("Mtu", UintegerValue (1500));
 
-	NS_LOG_LOGIC ("Creating p2pDevices WIFI...");
+	NS_LOG_UNCOND ("Creating p2pDevices WIFI...");
 	NetDeviceContainer p2pDevicesWIFI;
 	p2pDevicesWIFI = p2p.Install (remoteHostWIFIContainer);
 
@@ -140,44 +143,55 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_LOGIC ("==> Initializing WifiHelper...");//
+	NS_LOG_UNCOND ("==> Initializing Wifi...");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
 	YansWifiChannelHelper 	channel = YansWifiChannelHelper::Default ();
-	YansWifiPhyHelper 		phy 	= YansWifiPhyHelper::Default ();
-	WifiHelper 				wifi 	= WifiHelper::Default ();
+	YansWifiPhyHelper 	 	phy 	= YansWifiPhyHelper::Default ();
+	WifiHelper 				wifi;
 
 	NetDeviceContainer 		ueWifiDevice;
 	NetDeviceContainer 		wifiApdevice;
 
+	uint32_t channelNumber = 1;
+	Ssid ssid = Ssid ("ns3-wifi");
+
 	if(use802_11ad)
 	{
-		QosWifiMacHelper 		mac 	= QosWifiMacHelper::Default ();
-		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
+		QosWifiMacHelper mac = QosWifiMacHelper::Default ();
 
+		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
+		//wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-9));
+		wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate7Gbps"), "RtsCtsThreshold", UintegerValue (0));
+
+		////video trasmission
 		//mac.SetType ("ns3::AmpduTag");
+		mac.SetType ("ns3::AdhocWifiMac");
 		mac.SetBlockAckThresholdForAc(AC_VI, 2);
 		mac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (262143));
-
-		Ssid ssid = Ssid ("ns3-wifi");
-
-		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-9));
 
 		channel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
 		//channel.AddPropagationLoss ("ns3::FriisPropagationLossModel","Lambda", DoubleValue(3e8/60.0e9));
 
 		phy.SetChannel (channel.Create ());
+		phy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
 
-	//    if (g_Options.antenna == FW_Antenna_Cone)
-	//    	phy.SetAntenna ("ns3::ConeAntenna", "Beamwidth", DoubleValue(ConeAntenna::GainDbiToBeamwidth(0)));
-	//    else if (g_Options.antenna == FW_Antenna_Measured)
-	//    	phy.SetAntenna ("ns3::Measured2DAntenna", "Mode", DoubleValue(10));
+		phy.Set ("ChannelNumber", UintegerValue(channelNumber));
+//		phy.Set ("TxPowerStart", DoubleValue (10.0));
+//		phy.Set ("TxPowerEnd", DoubleValue (10.0));
+//		phy.Set ("TxPowerLevels", UintegerValue (1));
+//		phy.Set ("TxGain", DoubleValue (0));
+//		phy.Set ("RxGain", DoubleValue (0));
+//		phy.Set ("RxNoiseFigure", DoubleValue (10));
+//		phy.Set ("CcaMode1Threshold", DoubleValue (-79));
+//		phy.Set ("EnergyDetectionThreshold", DoubleValue (-79 + 3));
 
-		int		channelNumber 	= 1;
-		//phy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
-		//phy.SetErrorRateModel ("ns3::YansErrorRateModel");
-		phy.Set("ChannelNumber", UintegerValue(channelNumber));
+
+		//phy.SetAntenna ("ns3::ConeAntenna", "Beamwidth", DoubleValue(ConeAntenna::GainDbiToBeamwidth(0))); //Antenna_Cone
+		//phy.SetAntenna ("ns3::Measured2DAntenna", "Mode", DoubleValue(10)); //Antenna_Measured
+
+
 
 		mac.SetType ("ns3::StaWifiMac", "Ssid", SsidValue (ssid), "ActiveProbing", BooleanValue (false));
 		ueWifiDevice = wifi.Install (phy, mac, ueNode);
@@ -188,17 +202,14 @@ int main (int argc, char *argv[])
 	else
 	{
 		NqosWifiMacHelper mac = NqosWifiMacHelper::Default (); //802.11a,b,g
+
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211g);
-
-		Ssid ssid = Ssid ("ns3-wifi");
-
 		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-9));
 
 		channel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
 
 		phy.SetChannel (channel.Create ());
-
-		int		channelNumber 	= 1;
+		phy.SetErrorRateModel ("ns3::YansErrorRateModel");
 		phy.Set("ChannelNumber", UintegerValue(channelNumber));
 
 		mac.SetType ("ns3::StaWifiMac", "Ssid", SsidValue (ssid), "ActiveProbing", BooleanValue (false));
@@ -208,9 +219,20 @@ int main (int argc, char *argv[])
 		wifiApdevice = wifi.Install (phy, mac, wifiApNode);
 	}
 
+	Ptr<NetDevice> ndClient = ueWifiDevice.Get (0);
+	Ptr<NetDevice> ndServer = wifiApdevice.Get (0);
+	Ptr<WifiNetDevice> wndClient = ndClient->GetObject<WifiNetDevice> ();
+	Ptr<WifiNetDevice> wndServer = ndServer->GetObject<WifiNetDevice> ();
+	Ptr<WifiPhy> wifiPhyPtrClient = wndClient->GetPhy ();
+	Ptr<WifiPhy> wifiPhyPtrServer = wndServer->GetPhy ();
+	wifiPhyPtrClient->SetNumberOfTransmitAntennas (nTransmitedAntennas);
+	wifiPhyPtrClient->SetNumberOfReceiveAntennas (nReceiveAntennas);
+	wifiPhyPtrServer->SetNumberOfTransmitAntennas (nTransmitedAntennas);
+	wifiPhyPtrServer->SetNumberOfReceiveAntennas (nReceiveAntennas);
+
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_LOGIC ("==> Initializing WIFI Mobility...");//
+	NS_LOG_UNCOND ("==> Initializing WIFI Mobility...");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -237,7 +259,7 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	   NS_LOG_LOGIC ("==> Initializing WIFI InternetStackHelper...");//
+	NS_LOG_UNCOND ("==> Initializing WIFI InternetStackHelper...");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -252,7 +274,7 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_LOGIC ("==> Initializing Applications...");//
+	NS_LOG_UNCOND ("==> Initializing Applications...");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -268,7 +290,7 @@ int main (int argc, char *argv[])
     	{
 			if(useDl)
 			{
-				NS_LOG_LOGIC ("Installing UDP DL app for UE WIFI ");
+				NS_LOG_UNCOND ("Installing UDP DL app for UE WIFI ");
 				PacketSinkHelper dlPacketSinkHelperWIFI ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), dlPort));
 				wifiServer.Add (dlPacketSinkHelperWIFI.Install (ueNode));
 
@@ -279,7 +301,7 @@ int main (int argc, char *argv[])
 			}
 			if(useUl)
 			{
-				NS_LOG_LOGIC ("Installing UDP UL app for UE WIFI ");
+				NS_LOG_UNCOND ("Installing UDP UL app for UE WIFI ");
 				PacketSinkHelper ulPacketSinkHelperWIFI ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), ulPort));
 				wifiServer.Add (ulPacketSinkHelperWIFI.Install (remoteHostWIFI));
 
@@ -328,7 +350,7 @@ int main (int argc, char *argv[])
 
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
-	NS_LOG_LOGIC ("==>Running Simulation...");
+	NS_LOG_UNCOND ("==>Running Simulation...");
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 

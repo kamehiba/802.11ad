@@ -1120,6 +1120,8 @@ WifiRemoteStationManager::IsAllowedControlAnswerModulationClass (enum WifiModula
       return (modClassAnswer == WIFI_MOD_CLASS_DSSS || modClassAnswer == WIFI_MOD_CLASS_HR_DSSS || modClassAnswer == WIFI_MOD_CLASS_ERP_OFDM);
     case WIFI_MOD_CLASS_OFDM:
       return (modClassAnswer == WIFI_MOD_CLASS_OFDM);
+    case WIFI_MOD_CLASS_80211ad_OFDM:
+      return (modClassAnswer == WIFI_MOD_CLASS_80211ad_OFDM);
     case WIFI_MOD_CLASS_HT:
     case WIFI_MOD_CLASS_VHT:
       return true;

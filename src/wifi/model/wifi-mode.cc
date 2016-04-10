@@ -129,7 +129,7 @@ WifiMode::GetDataRate (uint32_t channelWidth, bool isShortGuardInterval, uint8_t
     {
       dataRate = (11000000 / 8) * log2 (GetConstellationSize ());
     }
-  else if (item->modClass == WIFI_MOD_CLASS_OFDM || item->modClass == WIFI_MOD_CLASS_ERP_OFDM)
+  else if (item->modClass == WIFI_MOD_CLASS_OFDM || item->modClass == WIFI_MOD_CLASS_ERP_OFDM || item->modClass == WIFI_MOD_CLASS_80211ad_OFDM)
     {
       double symbolRate = (1 / 4.0) * 1e6;
 
@@ -518,6 +518,7 @@ WifiMode::IsHigherDataRate (WifiMode mode) const
         }
     case WIFI_MOD_CLASS_ERP_OFDM:
     case WIFI_MOD_CLASS_OFDM:
+    case WIFI_MOD_CLASS_80211ad_OFDM:
     case WIFI_MOD_CLASS_HT:
     case WIFI_MOD_CLASS_VHT:
       if (mode.GetModulationClass () == WIFI_MOD_CLASS_DSSS)

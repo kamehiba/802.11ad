@@ -730,7 +730,7 @@ ApWifiMac::Receive (Ptr<Packet> packet, const WifiMacHeader *hdr)
                         {
                           isErpStation = false;
                         }
-                      else if (mode.GetModulationClass () == WIFI_MOD_CLASS_OFDM)
+                      else if (mode.GetModulationClass () == WIFI_MOD_CLASS_OFDM || mode.GetModulationClass () == WIFI_MOD_CLASS_80211ad_OFDM)
                         {
                           isOfdmStation = false;
                         }
@@ -750,7 +750,7 @@ ApWifiMac::Receive (Ptr<Packet> packet, const WifiMacHeader *hdr)
                         {
                           isErpStation = true;
                         }
-                      else if (mode.GetModulationClass () == WIFI_MOD_CLASS_OFDM)
+                      else if (mode.GetModulationClass () == WIFI_MOD_CLASS_OFDM || mode.GetModulationClass () == WIFI_MOD_CLASS_80211ad_OFDM)
                         {
                           isOfdmStation = true;
                         }

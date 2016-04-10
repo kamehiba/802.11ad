@@ -58,6 +58,7 @@ enum WifiModulationClass
   WIFI_MOD_CLASS_ERP_OFDM,
   /** OFDM PHY (Clause 17) */
   WIFI_MOD_CLASS_OFDM,
+  WIFI_MOD_CLASS_80211ad_OFDM,
   /** HT PHY (Clause 20) */
   WIFI_MOD_CLASS_HT,
   /** VHT PHY (Clause 22) */
