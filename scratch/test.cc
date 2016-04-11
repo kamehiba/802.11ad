@@ -47,9 +47,8 @@
 #include "ns3/cone-antenna.h"
 #include "ns3/measured-2d-antenna.h"
 #include <ns3/femtocellBlockAllocator.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cstdlib>
+#include "ns3/csma-module.h"
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
@@ -77,7 +76,7 @@ int main (int argc, char *argv[])
 	uint32_t ulPort 					= 9;
 
 	uint32_t mtu						= 1500; 		// p2p Mtu
-	uint32_t linkDelay					= 0.010;		// p2p link Delay ms
+	//uint32_t linkDelay					= 0.010;		// p2p link Delay ms
 	std::string dataRate 				= "100Gb/s";
 
 	uint32_t maxPackets					= 100000000; 	// The maximum number of packets the application will send
@@ -92,7 +91,7 @@ int main (int argc, char *argv[])
 	double BoxYmax						= 10;
 
 	//Femtocells Vars
-	bool useFemtocells					= false;
+	bool useFemtocells					= true;
 	uint32_t nFemtocells				= 1;
 	uint32_t nFloors					= 1;
 	uint32_t nApartmentsX				= 1;
@@ -116,7 +115,6 @@ int main (int argc, char *argv[])
 	// turn off RTS/CTS for frames below 2200 bytes
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
 
-	PointToPointHelper 			p2p;
 	Ipv4AddressHelper 			ipv4;
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
@@ -143,39 +141,14 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Creating Nodes");
 ///////////////////////////////////////////////////////////
 
-	NodeContainer remoteHostContainermmWave;
-	remoteHostContainermmWave.Create (1);
-	Ptr<Node> remoteHost = remoteHostContainermmWave.Get (0);
-
 	NodeContainer enbNodes;
 	enbNodes.Create(numEnb);
 
 	NodeContainer ueNodes;
 	ueNodes.Create(numUe);
 
-	internet.Install(remoteHost);
 	internet.Install(enbNodes);
 	internet.Install(ueNodes);
-
-///////////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Initializing Remote Host WIFI");
-///////////////////////////////////////////////////////////
-
-	NS_LOG_UNCOND ("Installing enbNodes on Remote Host");
-	NetDeviceContainer p2pDevicesWIFI;
-
-	NS_LOG_UNCOND ("Creating p2pDevices Attributes");
-	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
-	{
-		p2p.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
-		p2p.SetChannelAttribute ("Delay", TimeValue (Seconds (linkDelay)));
-		p2p.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
-		p2pDevicesWIFI = p2p.Install (remoteHost, enbNodes.Get(u));
-	}
-
-	NS_LOG_UNCOND ("Assigning IP to Remote Host");
-	ipv4.SetBase ("10.0.0.0", "255.0.0.0");
-	Ipv4InterfaceContainer p2pWifiIpIfaces = ipv4.Assign (p2pDevicesWIFI);//remoteHost <> ENB
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -209,6 +182,10 @@ int main (int argc, char *argv[])
 	Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
 	m2DAntenna->SetMode(10);
 
+	//Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
+	//coneAntenna->SetGainDbi(0);
+	//coneAntenna->GainDbiToBeamwidth(0);
+
 	mac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
 	ueWifiDevice = wifi.Install (phy, mac, ueNodes);
 
@@ -220,16 +197,6 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Initializing WIFI Mobility");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
-
-	NS_LOG_UNCOND ("Installing mobility on remoteHostWIFI");
-	MobilityHelper rhmobility;
-	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc->Add (Vector (0.0, -20.0, 0.0));
-	rhmobility.SetPositionAllocator (rhPositionAlloc);
-	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-	rhmobility.Install (remoteHost);
-	BuildingsHelper::Install (remoteHost);
 
 	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea");
 	MobilityHelper enbMobility;
@@ -289,8 +256,9 @@ int main (int argc, char *argv[])
 
     for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
     {
-    	Ipv4Address remoteHostWIFIAddr 	= p2pWifiIpIfaces.GetAddress (0);
     	Ipv4Address ueWIFIAddr 			= wifiUeIPInterface.GetAddress (u);
+    	Ipv4Address remoteHostWIFIAddr 	= wifiApInterface.GetAddress (0);
+    	Ptr<Node> remoteHost 			= enbNodes.Get (0);
 
 		if(useUdp)
 		{
@@ -375,7 +343,7 @@ int main (int argc, char *argv[])
 
 	if (tracing)
 	{
-	  p2p.EnablePcapAll (outFile);
+	  //p2p.EnablePcapAll (outFile);
 	  phy.EnablePcap (outFile, enbApdevice.Get (0));
 	  phy.EnablePcapAll (outFile, true);
 	}
