@@ -32,6 +32,7 @@
 #include "edca-txop-n.h"
 #include "erp-information.h"
 #include "error-rate-model.h"
+#include "femtocellBlockAllocator.h"
 #include "ht-capabilities.h"
 #include "ht-operations.h"
 #include "ht-wifi-mac-helper.h"
