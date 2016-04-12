@@ -17,6 +17,9 @@
 
  Default Network Topology
 
+  WIFI
+
+
    Enb
    *
    -
@@ -24,6 +27,7 @@
    - ue
 
 */
+
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
 #include "ns3/core-module.h"
@@ -48,6 +52,8 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 
 int main (int argc, char *argv[])
 {
+	//LogComponentEnable ("UdpServer", LOG_LEVEL_INFO);
+	//LogComponentEnable ("UdpClient", LOG_LEVEL_INFO);
 	LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
 	double simulationTime				= 30;
@@ -55,16 +61,31 @@ int main (int argc, char *argv[])
 	bool tracing						= false;
 	bool flowmonitor					= true;
 
-	double serverStartTime				= 0.05;
+	bool   useUdp						= true;
 
-	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s
+	bool   useDl						= true;
+	bool   useUl						= false;
 
-	uint32_t wifiChannelNumber			= 1;
+	double serverStartTime				= 0.01;
+	double clientStartTime				= 0.01;
+
+	uint32_t dlPort 					= 12345;
+	uint32_t ulPort 					= 9;
+
+	uint32_t mtu						= 1500; 		// p2p Mtu
+	//uint32_t linkDelay					= 0.010;		// p2p link Delay ms
+	std::string dataRate 				= "512kb/s";
+
+	uint32_t maxPackets					= 4294967295u; 	// The maximum number of packets the application will send
+	uint32_t maxTCPBytes 				= 0;
+	double UDPPacketInterval 			= 1;
+
+	uint32_t channelNumber 				= 1;
 
 	double BoxXmin						= 0;
-	double BoxXmax						= 50;
+	double BoxXmax						= 10;
 	double BoxYmin						= 0;
-	double BoxYmax						= 50;
+	double BoxYmax						= 10;
 
 	//Femtocells Vars
 	bool useFemtocells					= true;
@@ -75,29 +96,9 @@ int main (int argc, char *argv[])
 	double ueSpeed						= 1.0; // m/s.
 
 	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 100;
+	uint16_t numUe 						= 3;
 
 	std::string outFile 				= "debug";
-
-
-	Ipv4AddressHelper 			ipv4;
-	InternetStackHelper 		internet;
-	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
-    ApplicationContainer 		serverApps, clientApps;
-	Box 						boxArea;
-
-///////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Setting Up Configs");
-///////////////////////////////////////////////
-
-	// disable fragmentation for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
-	// turn off RTS/CTS for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
-
-///////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Setting Up Command Line Parameters");
-///////////////////////////////////////////////
 
 	CommandLine cmd;
 	cmd.AddValue("simulationTime", "Simulation Time: ", simulationTime);
@@ -105,6 +106,17 @@ int main (int argc, char *argv[])
 	ConfigStore inputConfig;
 	inputConfig.ConfigureDefaults ();
 	cmd.Parse (argc, argv);
+
+	// disable fragmentation for frames below 2200 bytes
+	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
+	// turn off RTS/CTS for frames below 2200 bytes
+	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+
+	Ipv4AddressHelper 			ipv4;
+	InternetStackHelper 		internet;
+	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
+    ApplicationContainer 		serverApps, clientApps;
+	Box 						boxArea;
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Area");
@@ -142,47 +154,40 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 
 	YansWifiChannelHelper 	channel = YansWifiChannelHelper::Default ();
-	YansWifiPhyHelper 	 	wifiPhy	= YansWifiPhyHelper::Default ();
-	QosWifiMacHelper		wifiMac = QosWifiMacHelper::Default ();
+	YansWifiPhyHelper 	 	phy 	= YansWifiPhyHelper::Default ();
+	QosWifiMacHelper		mac 	= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
 	NetDeviceContainer 		enbApdevice;
 	NetDeviceContainer 		ueWifiDevice;
 
-//	for (uint32_t i = 0; i < numEnb; ++i)
-//	{
-//		std::ostringstream oss;
-//		oss << "wifi-default-" << i;
-//		Ssid ssid = Ssid (oss.str ());
-		Ssid ssid = Ssid ("ns3-wifi");
+	Ssid ssid = Ssid ("ns3-wifi");
 
-		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
-		wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-		//wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
-		//wifiMac.SetType ("ns3::AdhocWifiMac");
+	wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
+	wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
 
-		////video trasmission
-		wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
-		wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (262143));
+	mac.SetType ("ns3::AdhocWifiMac");
 
-		wifiPhy.SetChannel (channel.Create ());
-		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
-		wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
+	////video trasmission
+	mac.SetBlockAckThresholdForAc(AC_VI, 2);
+	mac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (262143));
 
-		//Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
-		//m2DAntenna->SetMode(10);
+	phy.SetChannel (channel.Create ());
+	phy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
+	phy.Set ("ChannelNumber", UintegerValue(channelNumber));
 
-		Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
-		coneAntenna->SetGainDbi(0);
-		coneAntenna->GainDbiToBeamwidth(0);
+	Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
+	m2DAntenna->SetMode(10);
 
-		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
-		ueWifiDevice = wifi.Install (wifiPhy, wifiMac, ueNodes);
+	//Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
+	//coneAntenna->SetGainDbi(0);
+	//coneAntenna->GainDbiToBeamwidth(0);
 
-		//mac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid));
-		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes);
-	//}
+	mac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
+	ueWifiDevice = wifi.Install (phy, mac, ueNodes);
+
+	mac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
+	enbApdevice = wifi.Install (phy, mac, enbNodes);
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -234,33 +239,11 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	ipv4.SetBase ("10.0.0.0", "255.255.255.0");
-	Ipv4InterfaceContainer wifiApInterface 		= ipv4.Assign (enbApdevice);
-
 	ipv4.SetBase ("192.168.1.0", "255.255.255.0");
+	Ipv4InterfaceContainer wifiApInterface 		= ipv4.Assign (enbApdevice);
 	Ipv4InterfaceContainer wifiUeIPInterface 	= ipv4.Assign (ueWifiDevice);
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning Routing Tables");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
-	{
-		Ptr<Node> enb = enbNodes.Get (u);
-		Ptr<Ipv4StaticRouting> enbStaticRouting = ipv4RoutingHelper.GetStaticRouting (enb->GetObject<Ipv4> ());
-		enbStaticRouting->AddNetworkRouteTo("192.168.1.0","255.255.255.0",1);
-	}
-
-	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
-	{
-		Ptr<Node> ue = ueNodes.Get (u);
-		Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
-		ueStaticRouting->AddNetworkRouteTo("10.0.0.0","255.255.255.0",1);
-	}
-
-	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -268,22 +251,75 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
-	{
-		for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+    for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+    {
+    	Ipv4Address ueWIFIAddr 			= wifiUeIPInterface.GetAddress (u);
+    	Ipv4Address remoteHostWIFIAddr 	= wifiApInterface.GetAddress (0);
+    	Ptr<Node> remoteHost 			= enbNodes.Get (0);
+
+		if(useUdp)
 		{
-			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
-			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
-			onoff.SetConstantRate (DataRate (dataRate));
+			if(useDl)
+			{
+				NS_LOG_UNCOND ("==> Installing UDP DL app for UE MMWAVE "  << u);
+				PacketSinkHelper dlPacketSinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), dlPort));
+				serverApps.Add (dlPacketSinkHelper.Install (ueNodes.Get(u)));
 
-			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
-			apps.Start (Seconds (serverStartTime));
+				UdpClientHelper dlClient (ueWIFIAddr, dlPort);
+				dlClient.SetAttribute ("Interval", TimeValue (MilliSeconds(UDPPacketInterval)));
+				dlClient.SetAttribute ("MaxPackets", UintegerValue(maxPackets));
+				dlClient.SetAttribute ("PacketSize", UintegerValue (1472)); /// UDP payloadSize = 1472 bytes
+				clientApps.Add (dlClient.Install (remoteHost));
 
-			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-			apps = sink.Install (ueNodes.Get(u));
-			apps.Start (Seconds (serverStartTime));
+				UdpServerHelper udpServer = UdpServerHelper (dlPort);
+				clientApps = udpServer.Install (ueNodes.Get(u));
+			}
+
+			if(useUl)
+			{
+				NS_LOG_UNCOND ("==> Installing UDP UL app for UE MMWAVE "  << u);
+				PacketSinkHelper ulPacketSinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), ulPort));
+				serverApps.Add (ulPacketSinkHelper.Install (remoteHost));
+
+				UdpClientHelper ulClient (remoteHostWIFIAddr, ulPort);
+				ulClient.SetAttribute ("Interval", TimeValue (MilliSeconds(UDPPacketInterval)));
+				ulClient.SetAttribute ("MaxPackets", UintegerValue(maxPackets));
+				ulClient.SetAttribute ("PacketSize", UintegerValue (1472)); /// UDP payloadSize = 1472 bytes
+				clientApps.Add (ulClient.Install (ueNodes.Get(u)));
+
+				UdpServerHelper udpServer = UdpServerHelper (ulPort);
+				clientApps = udpServer.Install (remoteHost);
+			}
 		}
-	}
+		else
+		{
+			if(useDl)
+			{
+			  NS_LOG_UNCOND ("==> Installing TCP DL app for UE WIFI "  << u);
+			  PacketSinkHelper sinkDl ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), dlPort));
+			  serverApps.Add (sinkDl.Install (ueNodes.Get(u)));
+
+			  BulkSendHelper sourceDl ("ns3::TcpSocketFactory", InetSocketAddress (ueWIFIAddr, dlPort));
+			  sourceDl.SetAttribute ("MaxBytes", UintegerValue (maxTCPBytes));
+			  sourceDl.SetAttribute ("SendSize", UintegerValue (10000));
+			  clientApps.Add (sourceDl.Install (remoteHost));
+			}
+			if(useUl)
+			{
+			  NS_LOG_UNCOND ("==> Installing TCP UL app for UE WIFI "  << u);
+			  PacketSinkHelper sinkUl ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), ulPort));
+			  serverApps.Add (sinkUl.Install (remoteHost));
+
+			  BulkSendHelper sourceUl ("ns3::TcpSocketFactory", InetSocketAddress (remoteHostWIFIAddr, ulPort));
+			  sourceUl.SetAttribute ("MaxBytes", UintegerValue (maxTCPBytes));
+			  sourceUl.SetAttribute ("SendSize", UintegerValue (10000));
+			  clientApps.Add (sourceUl.Install (ueNodes.Get(u)));
+			}
+		}
+    }
+
+    serverApps.Start (Seconds (serverStartTime));
+	clientApps.Start (Seconds (clientStartTime));
 
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
@@ -298,16 +334,17 @@ int main (int argc, char *argv[])
 	std::cout << "UE Speed: " << ueSpeed << "m/s" << " <> " << ueSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
+	std::cout << "Mtu: " << mtu << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
-	std::cout << "========================= " << "\n\n";
+	std::cout << "========================= " << "\n\n\n";
 
 	Simulator::Stop (Seconds (simulationTime));
 
 	if (tracing)
 	{
 	  //p2p.EnablePcapAll (outFile);
-	  ////wifiPhy.EnablePcap (outFile, enbApdevice.Get (0));
-		wifiPhy.EnablePcapAll (outFile, true);
+	  phy.EnablePcap (outFile, enbApdevice.Get (0));
+	  phy.EnablePcapAll (outFile, true);
 	}
 
 	FlowMonitorHelper flowmon;
