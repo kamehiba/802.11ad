@@ -62,9 +62,9 @@ int main (int argc, char *argv[])
 	uint32_t wifiChannelNumber			= 1;
 
 	double BoxXmin						= 0;
-	double BoxXmax						= 5;
+	double BoxXmax						= 15;
 	double BoxYmin						= 0;
-	double BoxYmax						= 5;
+	double BoxYmax						= 15;
 
 	//Femtocells Vars
 	bool useFemtocells					= true;
@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
 	double ueSpeed						= 1.0; // m/s.
 
 	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 1;
+	uint16_t numUe 						= 3;
 
 	std::string outFile 				= "debug";
 
@@ -186,7 +186,6 @@ int main (int argc, char *argv[])
 		wifiUeIPInterface = ipv4UE.Assign (ueWifiDevice);
 
 		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-		//wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid));
 		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes);
 		wifiApInterface = ipv4Enb.Assign (enbApdevice);
 	}
