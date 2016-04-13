@@ -21,7 +21,7 @@
    *
    -
    -
-   - ue
+   - ues
 
 */
 //#include "ns3/lte-module.h"
@@ -79,12 +79,12 @@ int main (int argc, char *argv[])
 
 	std::string outFile 				= "debug";
 
-	Ipv4InterfaceContainer 		wifiApInterface, wifiUeIPInterface;
-	Ipv4AddressHelper 			ipv4Enb, ipv4UE;
-	InternetStackHelper 		internet;
-	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
-    ApplicationContainer 		serverApps, clientApps;
-	Box 						boxArea;
+	Ipv4InterfaceContainer 				wifiApInterface, wifiUeIPInterface;
+	Ipv4AddressHelper 					ipv4Enb, ipv4UE;
+	InternetStackHelper 				internet;
+	Ipv4StaticRoutingHelper 			ipv4RoutingHelper;
+    ApplicationContainer 				serverApps, clientApps;
+	Box 								boxArea;
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Configs");
@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
 	NetDeviceContainer 		enbApdevice;
 	NetDeviceContainer 		ueWifiDevice;
 
-	for (uint32_t i = 0; i < numEnb; ++i)
+	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
 	{
 		std::ostringstream oss;
 		oss << "wifi-default-" << i;
@@ -264,19 +264,19 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
+	for (uint32_t i = 0; i < ueNodes.GetN (); ++i)
 	{
-		for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+		for (uint32_t j = 0; j < enbNodes.GetN (); ++j)
 		{
-			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
+			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (i), 9);
 			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
 			onoff.SetConstantRate (DataRate (dataRate));
 
-			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
+			ApplicationContainer apps = onoff.Install (enbNodes.Get(j));
 			apps.Start (Seconds (serverStartTime));
 
 			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-			apps = sink.Install (ueNodes.Get(u));
+			apps = sink.Install (ueNodes.Get(i));
 			apps.Start (Seconds (serverStartTime));
 		}
 	}
