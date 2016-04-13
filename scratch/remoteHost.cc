@@ -60,11 +60,13 @@ int main (int argc, char *argv[])
 	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s
 
 	uint32_t wifiChannelNumber			= 1;
+	uint32_t mtu						= 1500; // p2p Mtu
+	uint32_t p2pLinkDelay				= 0.010;// p2p link Delay
 
 	double BoxXmin						= 0;
-	double BoxXmax						= 50;
+	double BoxXmax						= 5;
 	double BoxYmin						= 0;
-	double BoxYmax						= 50;
+	double BoxYmax						= 5;
 
 	//Femtocells Vars
 	bool useFemtocells					= true;
@@ -75,12 +77,14 @@ int main (int argc, char *argv[])
 	double ueSpeed						= 1.0; // m/s.
 
 	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 100;
+	uint16_t numUe 						= 1;
 
 	std::string outFile 				= "debug";
 
-
-	Ipv4AddressHelper 			ipv4;
+	Ipv4AddressHelper 			ipv4Rh, ipv4Enb, ipv4UE;
+	NetDeviceContainer 			enbApdevice, ueWifiDevice, remoteHostDevice;
+	Ipv4InterfaceContainer 		remoteHostInterface, wifiApInterface, wifiUeIPInterface;
+	PointToPointHelper 			p2ph;
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
     ApplicationContainer 		serverApps, clientApps;
@@ -126,14 +130,29 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Creating Nodes");
 ///////////////////////////////////////////////////////////
 
+	NodeContainer remoteHostContainer;
+	remoteHostContainer.Create (1);
+	Ptr<Node> remoteHost = remoteHostContainer.Get (0);
+
 	NodeContainer enbNodes;
 	enbNodes.Create(numEnb);
 
 	NodeContainer ueNodes;
 	ueNodes.Create(numUe);
 
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices Enb/Ue");
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+
+	internet.Install (remoteHostContainer);
 	internet.Install(enbNodes);
 	internet.Install(ueNodes);
+
+	ipv4Rh.SetBase ("1.0.0.0", "255.255.255.0");
+	ipv4Enb.SetBase ("10.0.0.0", "255.255.255.0");
+	ipv4UE.SetBase ("192.168.1.0", "255.255.255.0");
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -146,20 +165,27 @@ int main (int argc, char *argv[])
 	QosWifiMacHelper		wifiMac = QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
-	NetDeviceContainer 		enbApdevice;
-	NetDeviceContainer 		ueWifiDevice;
+	//Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
 
-//	for (uint32_t i = 0; i < numEnb; ++i)
-//	{
-//		std::ostringstream oss;
-//		oss << "wifi-default-" << i;
-//		Ssid ssid = Ssid (oss.str ());
-		Ssid ssid = Ssid ("ns3-wifi");
+	for (uint32_t i = 0; i < numEnb; ++i)
+	{
+		p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
+		p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (p2pLinkDelay)));
+		p2ph.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
+		remoteHostDevice = p2ph.Install (enbNodes.Get(i), remoteHost);
+		remoteHostInterface	= ipv4Rh.Assign (remoteHostDevice);
+
+		//////////////////////////////////////////////////
+		NS_LOG_UNCOND ("Innitializing WIFI on ENB-" << i);
+		///////////////////////////////////////////////////
+
+		std::ostringstream oss;
+		oss << "wifi-" << i;
+		Ssid ssid = Ssid (oss.str ());
+		//Ssid ssid = Ssid ("ns3-wifi");
 
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
 		wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-		//wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
-		//wifiMac.SetType ("ns3::AdhocWifiMac");
 
 		////video trasmission
 		wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
@@ -178,17 +204,57 @@ int main (int argc, char *argv[])
 
 		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
 		ueWifiDevice = wifi.Install (wifiPhy, wifiMac, ueNodes);
+		wifiUeIPInterface = ipv4UE.Assign (ueWifiDevice);
 
-		//mac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
+		//wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
 		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid));
 		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes);
-	//}
+		wifiApInterface = ipv4Enb.Assign (enbApdevice);
+	}
+
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Assigning Routing Tables");
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+
+	Ptr<Ipv4StaticRouting> rhStaticRouting = ipv4RoutingHelper.GetStaticRouting (remoteHost->GetObject<Ipv4> ());
+	rhStaticRouting->AddNetworkRouteTo("10.0.0.0","255.255.255.0",1);
+	rhStaticRouting->AddNetworkRouteTo("192.168.1.0","255.255.255.0",1);
+
+	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
+	{
+		Ptr<Node> enb = enbNodes.Get (u);
+		Ptr<Ipv4StaticRouting> enbStaticRouting = ipv4RoutingHelper.GetStaticRouting (enb->GetObject<Ipv4> ());
+		enbStaticRouting->AddNetworkRouteTo("192.168.1.0","255.255.255.0",2);
+		enbStaticRouting->AddNetworkRouteTo("10.0.0.0","255.255.255.0",2);
+	}
+
+	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+	{
+		Ptr<Node> ue = ueNodes.Get (u);
+		Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
+		ueStaticRouting->AddNetworkRouteTo("10.0.0.0","255.255.255.0",1);
+		ueStaticRouting->AddNetworkRouteTo("192.168.1.0","255.255.255.0",1);
+	}
+
+	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Initializing WIFI Mobility");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
+
+	NS_LOG_UNCOND ("Installing mobility on remoteHost");
+	MobilityHelper rhmobility;
+	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
+	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
+	rhPositionAlloc->Add (Vector (0.0, 0.0, 0.0));
+	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+	rhmobility.SetPositionAllocator(rhPositionAlloc);
+	rhmobility.Install(remoteHostContainer);
+	BuildingsHelper::Install (remoteHostContainer);
 
 	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea");
 	MobilityHelper enbMobility;
@@ -230,59 +296,22 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices Enb/Ue");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	ipv4.SetBase ("10.0.0.0", "255.255.255.0");
-	Ipv4InterfaceContainer wifiApInterface 		= ipv4.Assign (enbApdevice);
-
-	ipv4.SetBase ("192.168.1.0", "255.255.255.0");
-	Ipv4InterfaceContainer wifiUeIPInterface 	= ipv4.Assign (ueWifiDevice);
-
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning Routing Tables");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
-	{
-		Ptr<Node> enb = enbNodes.Get (u);
-		Ptr<Ipv4StaticRouting> enbStaticRouting = ipv4RoutingHelper.GetStaticRouting (enb->GetObject<Ipv4> ());
-		enbStaticRouting->AddNetworkRouteTo("192.168.1.0","255.255.255.0",1);
-	}
-
-	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
-	{
-		Ptr<Node> ue = ueNodes.Get (u);
-		Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
-		ueStaticRouting->AddNetworkRouteTo("10.0.0.0","255.255.255.0",1);
-	}
-
-	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Initializing Applications");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
+	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
 	{
-		for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
-		{
-			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
-			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
-			onoff.SetConstantRate (DataRate (dataRate));
+		InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
+		OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
+		onoff.SetConstantRate (DataRate (dataRate));
 
-			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
-			apps.Start (Seconds (serverStartTime));
+		ApplicationContainer apps = onoff.Install (remoteHost);
+		apps.Start (Seconds (serverStartTime));
 
-			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-			apps = sink.Install (ueNodes.Get(u));
-			apps.Start (Seconds (serverStartTime));
-		}
+		PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
+		apps = sink.Install (ueNodes.Get(u));
+		apps.Start (Seconds (serverStartTime));
 	}
 
 /////////////////////////////////////////////////////

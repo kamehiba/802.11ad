@@ -201,6 +201,11 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/aarf-wifi-manager.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/aarf-wifi-manager.cc.1.o", 
+    "file": "../src/wifi/model/aarf-wifi-manager.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 ../src/core/model/vector.cc -c -o /home/daniel/workspace/802.11ad/build/src/core/model/vector.cc.1.o", 
     "file": "../src/core/model/vector.cc"
   }, 
@@ -321,11 +326,6 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/pf-ff-mac-scheduler.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/pf-ff-mac-scheduler.cc.1.o", 
-    "file": "../src/lte/model/pf-ff-mac-scheduler.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/flow-monitor/model/ipv6-flow-probe.cc -c -o /home/daniel/workspace/802.11ad/build/src/flow-monitor/model/ipv6-flow-probe.cc.1.o", 
     "file": "../src/flow-monitor/model/ipv6-flow-probe.cc"
   }, 
@@ -333,6 +333,11 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet/model/ipv6-route.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet/model/ipv6-route.cc.1.o", 
     "file": "../src/internet/model/ipv6-route.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -fno-strict-aliasing -fstack-protector -fwrapv -fvisibility=hidden -Wno-array-bounds -pthread -pthread -I. -I.. -Isrc/internet-apps/bindings -I../src/internet-apps/bindings -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7 -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DNS_DEPRECATED= -DNS3_DEPRECATED_H -DHAVE_PYEXT=1 -D_FORTIFY_SOURCE=2 -DNDEBUG -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 src/internet-apps/bindings/ns3module.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet-apps/bindings/ns3module.cc.5.o", 
+    "file": "src/internet-apps/bindings/ns3module.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -423,6 +428,11 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 ../src/core/model/double.cc -c -o /home/daniel/workspace/802.11ad/build/src/core/model/double.cc.1.o", 
     "file": "../src/core/model/double.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/helper/mac-stats-calculator.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/helper/mac-stats-calculator.cc.1.o", 
+    "file": "../src/lte/helper/mac-stats-calculator.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -661,6 +671,11 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/network/model/nix-vector.cc -c -o /home/daniel/workspace/802.11ad/build/src/network/model/nix-vector.cc.1.o", 
+    "file": "../src/network/model/nix-vector.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wave/model/vsa-manager.cc -c -o /home/daniel/workspace/802.11ad/build/src/wave/model/vsa-manager.cc.1.o", 
     "file": "../src/wave/model/vsa-manager.cc"
   }, 
@@ -816,6 +831,11 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/model/dot11s/airtime-metric.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/model/dot11s/airtime-metric.cc.1.o", 
+    "file": "../src/mesh/model/dot11s/airtime-metric.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet/model/tcp-socket-factory.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet/model/tcp-socket-factory.cc.1.o", 
     "file": "../src/internet/model/tcp-socket-factory.cc"
   }, 
@@ -823,6 +843,11 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/constant-rate-wifi-manager.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/constant-rate-wifi-manager.cc.1.o", 
     "file": "../src/wifi/model/constant-rate-wifi-manager.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/lte-fr-hard-algorithm.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/lte-fr-hard-algorithm.cc.1.o", 
+    "file": "../src/lte/model/lte-fr-hard-algorithm.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -908,11 +933,6 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet/model/ipv6-pmtu-cache.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet/model/ipv6-pmtu-cache.cc.1.o", 
     "file": "../src/internet/model/ipv6-pmtu-cache.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/bs-scheduler-simple.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/bs-scheduler-simple.cc.1.o", 
-    "file": "../src/wimax/model/bs-scheduler-simple.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1013,11 +1033,6 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/config-store/model/attribute-iterator.cc -c -o /home/daniel/workspace/802.11ad/build/src/config-store/model/attribute-iterator.cc.1.o", 
     "file": "../src/config-store/model/attribute-iterator.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/model/dot11s/dot11s-mac-header.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/model/dot11s/dot11s-mac-header.cc.1.o", 
-    "file": "../src/mesh/model/dot11s/dot11s-mac-header.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1206,6 +1221,11 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../scratch/bridge.cc -c -o /home/daniel/workspace/802.11ad/build/scratch/bridge.cc.5.o", 
+    "file": "../scratch/bridge.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/lte-rrc-protocol-real.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/lte-rrc-protocol-real.cc.1.o", 
     "file": "../src/lte/model/lte-rrc-protocol-real.cc"
   }, 
@@ -1248,11 +1268,6 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/stats/model/uinteger-16-probe.cc -c -o /home/daniel/workspace/802.11ad/build/src/stats/model/uinteger-16-probe.cc.1.o", 
     "file": "../src/stats/model/uinteger-16-probe.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/snr-to-block-error-rate-record.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/snr-to-block-error-rate-record.cc.1.o", 
-    "file": "../src/wimax/model/snr-to-block-error-rate-record.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1306,8 +1321,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/helper/point-to-point-epc-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/helper/point-to-point-epc-helper.cc.1.o", 
-    "file": "../src/lte/helper/point-to-point-epc-helper.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/bs-scheduler-simple.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/bs-scheduler-simple.cc.1.o", 
+    "file": "../src/wimax/model/bs-scheduler-simple.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1361,8 +1376,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/network/model/nix-vector.cc -c -o /home/daniel/workspace/802.11ad/build/src/network/model/nix-vector.cc.1.o", 
-    "file": "../src/network/model/nix-vector.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/snr-to-block-error-rate-record.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/snr-to-block-error-rate-record.cc.1.o", 
+    "file": "../src/wimax/model/snr-to-block-error-rate-record.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1468,11 +1483,6 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/nist-error-rate-model.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/nist-error-rate-model.cc.1.o", 
     "file": "../src/wifi/model/nist-error-rate-model.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/helper/flame/flame-installer.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/helper/flame/flame-installer.cc.1.o", 
-    "file": "../src/mesh/helper/flame/flame-installer.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1821,11 +1831,6 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -fno-strict-aliasing -fstack-protector -fwrapv -fvisibility=hidden -Wno-array-bounds -pthread -pthread -I. -I.. -Isrc/stats/bindings -I../src/stats/bindings -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7 -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DNS_DEPRECATED= -DNS3_DEPRECATED_H -DHAVE_PYEXT=1 -D_FORTIFY_SOURCE=2 -DNDEBUG -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 src/stats/bindings/ns3module.cc -c -o /home/daniel/workspace/802.11ad/build/src/stats/bindings/ns3module.cc.7.o", 
-    "file": "src/stats/bindings/ns3module.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/energy/model/energy-harvester.cc -c -o /home/daniel/workspace/802.11ad/build/src/energy/model/energy-harvester.cc.1.o", 
     "file": "../src/energy/model/energy-harvester.cc"
   }, 
@@ -1861,8 +1866,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/aarf-wifi-manager.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/aarf-wifi-manager.cc.1.o", 
-    "file": "../src/wifi/model/aarf-wifi-manager.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/helper/flame/flame-installer.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/helper/flame/flame-installer.cc.1.o", 
+    "file": "../src/mesh/helper/flame/flame-installer.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -1948,6 +1953,11 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 ../src/core/model/breakpoint.cc -c -o /home/daniel/workspace/802.11ad/build/src/core/model/breakpoint.cc.1.o", 
     "file": "../src/core/model/breakpoint.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/network/model/channel.cc -c -o /home/daniel/workspace/802.11ad/build/src/network/model/channel.cc.1.o", 
+    "file": "../src/network/model/channel.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -2606,11 +2616,6 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet/model/ipv6-option-header.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet/model/ipv6-option-header.cc.1.o", 
-    "file": "../src/internet/model/ipv6-option-header.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/energy/helper/li-ion-energy-source-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/energy/helper/li-ion-energy-source-helper.cc.1.o", 
     "file": "../src/energy/helper/li-ion-energy-source-helper.cc"
   }, 
@@ -2721,8 +2726,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/network/model/channel.cc -c -o /home/daniel/workspace/802.11ad/build/src/network/model/channel.cc.1.o", 
-    "file": "../src/network/model/channel.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -fno-strict-aliasing -fstack-protector -fwrapv -fvisibility=hidden -Wno-array-bounds -pthread -pthread -I. -I.. -Isrc/stats/bindings -I../src/stats/bindings -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7 -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DNS_DEPRECATED= -DNS3_DEPRECATED_H -DHAVE_PYEXT=1 -D_FORTIFY_SOURCE=2 -DNDEBUG -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 src/stats/bindings/ns3module.cc -c -o /home/daniel/workspace/802.11ad/build/src/stats/bindings/ns3module.cc.7.o", 
+    "file": "src/stats/bindings/ns3module.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -2801,8 +2806,13 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/qos-utils.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/qos-utils.cc.1.o", 
-    "file": "../src/wifi/model/qos-utils.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../scratch/backup2.cc -c -o /home/daniel/workspace/802.11ad/build/scratch/backup2.cc.2.o", 
+    "file": "../scratch/backup2.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/lte-enb-phy-sap.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/lte-enb-phy-sap.cc.1.o", 
+    "file": "../src/lte/model/lte-enb-phy-sap.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -2953,6 +2963,11 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/buildings/helper/buildings-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/buildings/helper/buildings-helper.cc.1.o", 
     "file": "../src/buildings/helper/buildings-helper.cc"
+  }, 
+  {
+    "directory": "/home/daniel/workspace/802.11ad/build", 
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet-apps/model/v4ping.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet-apps/model/v4ping.cc.1.o", 
+    "file": "../src/internet-apps/model/v4ping.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -3118,11 +3133,6 @@
     "directory": "/home/daniel/workspace/802.11ad/build", 
     "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mobility/model/gauss-markov-mobility-model.cc -c -o /home/daniel/workspace/802.11ad/build/src/mobility/model/gauss-markov-mobility-model.cc.1.o", 
     "file": "../src/mobility/model/gauss-markov-mobility-model.cc"
-  }, 
-  {
-    "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/crc8.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/crc8.cc.1.o", 
-    "file": "../src/wimax/model/crc8.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -3411,8 +3421,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/helper/mac-stats-calculator.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/helper/mac-stats-calculator.cc.1.o", 
-    "file": "../src/lte/helper/mac-stats-calculator.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/model/dot11s/dot11s-mac-header.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/model/dot11s/dot11s-mac-header.cc.1.o", 
+    "file": "../src/mesh/model/dot11s/dot11s-mac-header.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -3521,8 +3531,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/energy/helper/energy-harvester-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/energy/helper/energy-harvester-helper.cc.1.o", 
-    "file": "../src/energy/helper/energy-harvester-helper.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wimax/model/crc8.cc -c -o /home/daniel/workspace/802.11ad/build/src/wimax/model/crc8.cc.1.o", 
+    "file": "../src/wimax/model/crc8.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -3601,8 +3611,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/mesh/model/dot11s/airtime-metric.cc -c -o /home/daniel/workspace/802.11ad/build/src/mesh/model/dot11s/airtime-metric.cc.1.o", 
-    "file": "../src/mesh/model/dot11s/airtime-metric.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/pf-ff-mac-scheduler.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/pf-ff-mac-scheduler.cc.1.o", 
+    "file": "../src/lte/model/pf-ff-mac-scheduler.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -3666,8 +3676,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -fno-strict-aliasing -fstack-protector -fwrapv -fvisibility=hidden -Wno-array-bounds -pthread -pthread -I. -I.. -Isrc/internet-apps/bindings -I../src/internet-apps/bindings -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7 -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DNS_DEPRECATED= -DNS3_DEPRECATED_H -DHAVE_PYEXT=1 -D_FORTIFY_SOURCE=2 -DNDEBUG -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 src/internet-apps/bindings/ns3module.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet-apps/bindings/ns3module.cc.5.o", 
-    "file": "src/internet-apps/bindings/ns3module.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/helper/point-to-point-epc-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/helper/point-to-point-epc-helper.cc.1.o", 
+    "file": "../src/lte/helper/point-to-point-epc-helper.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -4036,8 +4046,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/lte-fr-hard-algorithm.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/lte-fr-hard-algorithm.cc.1.o", 
-    "file": "../src/lte/model/lte-fr-hard-algorithm.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet/model/ipv6-option-header.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet/model/ipv6-option-header.cc.1.o", 
+    "file": "../src/internet/model/ipv6-option-header.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -4086,8 +4096,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/internet-apps/model/v4ping.cc -c -o /home/daniel/workspace/802.11ad/build/src/internet-apps/model/v4ping.cc.1.o", 
-    "file": "../src/internet-apps/model/v4ping.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/energy/helper/energy-harvester-helper.cc -c -o /home/daniel/workspace/802.11ad/build/src/energy/helper/energy-harvester-helper.cc.1.o", 
+    "file": "../src/energy/helper/energy-harvester-helper.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
@@ -4101,8 +4111,8 @@
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
-    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -pthread -I. -I.. -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/pango-1.0 -I/usr/include/gio-unix-2.0 -I/usr/include/freetype2 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/libpng12 -I/usr/include/harfbuzz -I/usr/include/libxml2 -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 -DHAVE_GTK2=1 -DHAVE_LIBXML2=1 ../src/lte/model/lte-enb-phy-sap.cc -c -o /home/daniel/workspace/802.11ad/build/src/lte/model/lte-enb-phy-sap.cc.1.o", 
-    "file": "../src/lte/model/lte-enb-phy-sap.cc"
+    "command": "/usr/bin/g++ -O0 -ggdb -g3 -Wall -Werror -Wno-error=deprecated-declarations -fstrict-aliasing -Wstrict-aliasing -fPIC -pthread -I. -I.. -DNS3_BUILD_PROFILE_DEBUG -DNS3_ASSERT_ENABLE -DNS3_LOG_ENABLE -DHAVE_SYS_IOCTL_H=1 -DHAVE_IF_NETS_H=1 -DHAVE_NET_ETHERNET_H=1 -DHAVE_PACKET_H=1 -DHAVE_IF_TUN_H=1 -DHAVE_=1 -DHAVE_GSL=1 -DHAVE_SQLITE3=1 ../src/wifi/model/qos-utils.cc -c -o /home/daniel/workspace/802.11ad/build/src/wifi/model/qos-utils.cc.1.o", 
+    "file": "../src/wifi/model/qos-utils.cc"
   }, 
   {
     "directory": "/home/daniel/workspace/802.11ad/build", 
