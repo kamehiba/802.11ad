@@ -26,7 +26,6 @@
 */
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
-#include "ns3/csma-module.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/mobility-module.h"
@@ -51,7 +50,7 @@ int main (int argc, char *argv[])
 {
 	LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
-	double simulationTime				= 20;
+	double simulationTime				= 30;
 
 	bool tracing						= false;
 	bool flowmonitor					= true;
@@ -61,8 +60,6 @@ int main (int argc, char *argv[])
 	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s
 
 	uint32_t wifiChannelNumber			= 1;
-	uint32_t mtu						= 1500; // p2p Mtu
-	uint32_t p2pLinkDelay				= 0.010;// p2p link Delay
 
 	double BoxXmin						= 0;
 	double BoxXmax						= 5;
@@ -82,9 +79,8 @@ int main (int argc, char *argv[])
 
 	std::string outFile 				= "debug";
 
-	Ipv4AddressHelper 			ipv4Rh, ipv4Enb, ipv4UE;
-	NetDeviceContainer 			enbApdevice, ueWifiDevice, remoteHostDevice;
-	Ipv4InterfaceContainer 		remoteHostInterface, wifiApInterface, wifiUeIPInterface;
+	Ipv4InterfaceContainer 		wifiApInterface, wifiUeIPInterface;
+	Ipv4AddressHelper 			ipv4Enb, ipv4UE;
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
     ApplicationContainer 		serverApps, clientApps;
@@ -96,8 +92,12 @@ int main (int argc, char *argv[])
 
 	// disable fragmentation for frames below 2200 bytes
 	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
+
 	// turn off RTS/CTS for frames below 2200 bytes
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+
+	/// Set to true if this interface should respond to interface events by globallly recomputing routes
+	Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Command Line Parameters");
@@ -130,29 +130,17 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Creating Nodes");
 ///////////////////////////////////////////////////////////
 
-	NodeContainer remoteHostContainer;
-	remoteHostContainer.Create (1);
-	Ptr<Node> remoteHost = remoteHostContainer.Get (0);
-
 	NodeContainer enbNodes;
 	enbNodes.Create(numEnb);
 
 	NodeContainer ueNodes;
 	ueNodes.Create(numUe);
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices Enb/Ue");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	internet.Install (remoteHostContainer);
 	internet.Install(enbNodes);
 	internet.Install(ueNodes);
 
-	ipv4Rh.SetBase ("1.0.0.0", "255.255.255.0");
-	ipv4Enb.SetBase ("2.0.0.0", "255.255.255.0");
-	ipv4UE.SetBase ("3.0.0.0", "255.255.255.0");
+	ipv4Enb.SetBase ("1.0.0.0", "255.255.255.0");
+	ipv4UE.SetBase ("2.0.0.0", "255.255.255.0");
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -165,27 +153,13 @@ int main (int argc, char *argv[])
 	QosWifiMacHelper		wifiMac = QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
-	/// Set to true if this interface should respond to interface events by globallly recomputing routes
-	Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
+	NetDeviceContainer 		enbApdevice;
+	NetDeviceContainer 		ueWifiDevice;
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
+	for (uint32_t i = 0; i < numEnb; ++i)
 	{
-		PointToPointHelper 	p2ph;
-		p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
-		p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (p2pLinkDelay)));
-		p2ph.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
-		remoteHostDevice = p2ph.Install (enbNodes.Get(i), remoteHost);
-		remoteHostInterface	= ipv4Rh.Assign (remoteHostDevice);
-	}
-
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
-	{
-		//////////////////////////////////////////////////
-		NS_LOG_UNCOND ("Innitializing WIFI on ENB-" << i);
-		///////////////////////////////////////////////////
-
 		std::ostringstream oss;
-		oss << "wifi-" << i;
+		oss << "wifi-default-" << i;
 		Ssid ssid = Ssid (oss.str ());
 		//Ssid ssid = Ssid ("ns3-wifi");
 
@@ -207,7 +181,7 @@ int main (int argc, char *argv[])
 		coneAntenna->SetGainDbi(0);
 		coneAntenna->GainDbiToBeamwidth(0);
 
-		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
+		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
 		ueWifiDevice = wifi.Install (wifiPhy, wifiMac, ueNodes);
 		wifiUeIPInterface = ipv4UE.Assign (ueWifiDevice);
 
@@ -223,24 +197,20 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	Ptr<Ipv4StaticRouting> rhStaticRouting = ipv4RoutingHelper.GetStaticRouting (remoteHost->GetObject<Ipv4>());
-	rhStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//UEnode
-	rhStaticRouting->AddNetworkRouteTo("3.0.0.0","255.255.255.0",1);//UEnode
-
 	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
 	{
 		Ptr<Node> enb = enbNodes.Get (u);
 		Ptr<Ipv4StaticRouting> enbStaticRouting = ipv4RoutingHelper.GetStaticRouting (enb->GetObject<Ipv4> ());
-		enbStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//remoteHost
-		enbStaticRouting->AddNetworkRouteTo("3.0.0.0","255.255.255.0",2);//UEnode
+		enbStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//UEnode
+		enbStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//enbNode
 	}
 
 	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
 	{
 		Ptr<Node> ue = ueNodes.Get (u);
 		Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
-		ueStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//enbNode
-		ueStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//remoteHost
+		ueStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//enbNode
+		ueStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//UEnode
 	}
 
 	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -250,16 +220,6 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Initializing WIFI Mobility");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
-
-	NS_LOG_UNCOND ("Installing mobility on remoteHost");
-	MobilityHelper rhmobility;
-	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc->Add (Vector (0.0, 0.0, 0.0));
-	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-	rhmobility.SetPositionAllocator(rhPositionAlloc);
-	rhmobility.Install(remoteHostContainer);
-	BuildingsHelper::Install (remoteHostContainer);
 
 	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea");
 	MobilityHelper enbMobility;
@@ -305,18 +265,21 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
 	{
-		InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
-		OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
-		onoff.SetConstantRate (DataRate (dataRate));
+		for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+		{
+			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
+			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
+			onoff.SetConstantRate (DataRate (dataRate));
 
-		ApplicationContainer apps = onoff.Install (remoteHost);
-		apps.Start (Seconds (serverStartTime));
+			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
+			apps.Start (Seconds (serverStartTime));
 
-		PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-		apps = sink.Install (ueNodes.Get(u));
-		apps.Start (Seconds (serverStartTime));
+			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
+			apps = sink.Install (ueNodes.Get(u));
+			apps.Start (Seconds (serverStartTime));
+		}
 	}
 
 /////////////////////////////////////////////////////
@@ -327,8 +290,8 @@ int main (int argc, char *argv[])
 
 	std::cout << std::endl;
 	std::cout << "========================= " << "\n";
-	std::cout << "eNB: " << enbNodes.GetN () << "\n";
-	std::cout << "UE: " << ueNodes.GetN () << "\n";
+	std::cout << "eNB: " << numEnb << "\n";
+	std::cout << "UE: " << numUe << "\n";
 	std::cout << "UE Speed: " << ueSpeed << "m/s" << " <> " << ueSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
