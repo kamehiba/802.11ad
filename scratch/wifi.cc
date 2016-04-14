@@ -24,6 +24,7 @@
    - ues
 
 */
+
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
 #include "ns3/core-module.h"
@@ -48,23 +49,23 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 
 int main (int argc, char *argv[])
 {
-	LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+	//LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
-	double simulationTime				= 30;
+	double simulationTime				= 10;
 
 	bool tracing						= false;
 	bool flowmonitor					= true;
 
 	double serverStartTime				= 0.05;
 
-	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s
+	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s         512kb/s
 
 	uint32_t wifiChannelNumber			= 1;
 
 	double BoxXmin						= 0;
-	double BoxXmax						= 15;
+	double BoxXmax						= 5;
 	double BoxYmin						= 0;
-	double BoxYmax						= 15;
+	double BoxYmax						= 5;
 
 	//Femtocells Vars
 	bool useFemtocells					= true;
@@ -97,7 +98,7 @@ int main (int argc, char *argv[])
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
 
 	// Set to true if this interface should respond to interface events by globallly recomputing routes
-	Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
+	//Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Command Line Parameters");
@@ -159,7 +160,7 @@ int main (int argc, char *argv[])
 	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
 	{
 		std::ostringstream oss;
-		oss << "wifi-default-" << i;
+		oss << "ns3-wifi-" << i;
 		Ssid ssid = Ssid (oss.str ());
 		//Ssid ssid = Ssid ("ns3-wifi");
 
@@ -297,6 +298,7 @@ int main (int argc, char *argv[])
 	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
 
 	Simulator::Run ();
+
 	if(flowmonitor)
 	{
 //		AnimationInterface anim (outFile+"_anim.xml");
@@ -305,7 +307,25 @@ int main (int argc, char *argv[])
 
 		monitor->CheckForLostPackets ();
 		monitor->SerializeToXmlFile (outFile+"_monitor.xml", true, true);
+
+		Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
+		FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
+		for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
+		{
+			Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
+			std::cout << "Flow " << i->first - 2 << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
+			std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
+			std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
+			std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+			std::cout << "  Rx Packets: " << i->second.rxPackets << "\n";
+			std::cout << "  Rx Bytes:   " << i->second.rxBytes << "\n";
+			std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
+		}
 	}
+	std::cout << std::endl << std::endl;
+	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " seconds <> " << Simulator::Now().GetMinutes() << " minutes \n";
+	std::cout << "Real time: " << Simulator::Now().GetSeconds () << " seconds \n\n";
+
 	Simulator::Destroy ();
 
 	return 0;

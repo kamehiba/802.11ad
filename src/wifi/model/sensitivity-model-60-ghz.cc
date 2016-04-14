@@ -55,7 +55,7 @@ SensitivityModel60GHz::SensitivityModel60GHz ()
 double 
 SensitivityModel60GHz::GetChunkSuccessRate (WifiMode mode, WifiTxVector txVector, double snr, uint32_t nbits) const
 {
-	//NS_ASSERT_MSG(mode.GetModulationClass() == WIFI_MOD_CLASS_OFDM, "Expecting 802.11ad OFDM modulation");
+	NS_ASSERT_MSG(mode.GetModulationClass() == WIFI_MOD_CLASS_80211ad_OFDM, "Expecting 802.11ad OFDM modulation");
 
 	std::string modename = mode.GetUniqueName();
 

@@ -27,6 +27,7 @@
 
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
+//#include "ns3/stats-module.h" // 	Gnuplot gnuplot = Gnuplot (outFile+".eps");
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/mobility-module.h"
@@ -47,20 +48,28 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
 
+Ptr<PacketSink> sink;                         /* Pointer to the packet sink application */
+uint64_t lastTotalRx = 0;                     /* The value of the last total received bytes */
+
+void CalculateThroughput ();
+
 int main (int argc, char *argv[])
 {
-	LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+	//LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
-	double simulationTime				= 30;
+	double simulationTime				= 2;
+
+	bool use2DAntenna					= true;
 
 	bool tracing						= false;
 	bool flowmonitor					= true;
 
 	double serverStartTime				= 0.05;
 
-	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s
+	std::string dataRate 				= "1Gb/s"; // 1Gb/s = 1000000kb/s         512kb/s
 
 	uint32_t wifiChannelNumber			= 1;
+	uint32_t maxAmsduSize				= 262143;
 
 	double BoxXmin						= 0;
 	double BoxXmax						= 5;
@@ -75,27 +84,27 @@ int main (int argc, char *argv[])
 
 	double ueSpeed						= 1.0; // m/s.
 
-	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 2;
+	uint32_t numEnb 					= 1;
+	uint32_t numUe 						= 2;
 
 	std::string outFile 				= "debug";
 
+	FlowMonitorHelper 					flowmon;
 	Ipv4InterfaceContainer 				wifiApInterface, wifiUeIPInterface;
 	Ipv4AddressHelper 					ipv4Enb, ipv4UE;
 	InternetStackHelper 				internet;
 	Ipv4StaticRoutingHelper 			ipv4RoutingHelper;
     ApplicationContainer 				serverApps, clientApps;
 	Box 								boxArea;
+	NetDeviceContainer 					enbApdevice, ueWifiDevice;
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Configs");
 ///////////////////////////////////////////////
 
-	// disable fragmentation for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
-
-	// turn off RTS/CTS for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+	/* No fragmentation and no RTS/CTS */
+	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("999999"));
+	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("999999"));
 
 	// Set to true if this interface should respond to interface events by globallly recomputing routes
 	//Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
@@ -110,6 +119,12 @@ int main (int argc, char *argv[])
 	ConfigStore inputConfig;
 	inputConfig.ConfigureDefaults ();
 	cmd.Parse (argc, argv);
+
+///////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Checking Variables");
+///////////////////////////////////////////////
+
+	NS_ASSERT (numEnb > 0 && numUe > 0);
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Area");
@@ -149,13 +164,10 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	YansWifiChannelHelper 	channel = YansWifiChannelHelper::Default ();
-	YansWifiPhyHelper 	 	wifiPhy	= YansWifiPhyHelper::Default ();
-	QosWifiMacHelper		wifiMac = QosWifiMacHelper::Default ();
+	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
+	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
+	QosWifiMacHelper		wifiMac 	= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
-
-	NetDeviceContainer 		enbApdevice;
-	NetDeviceContainer 		ueWifiDevice;
 
 	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
 	{
@@ -166,21 +178,41 @@ int main (int argc, char *argv[])
 
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
 		wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+		//wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
+		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate700Mbps"));
+
+		wifiMac.SetType ("ns3::AdhocWifiMac");
 
 		////video trasmission
 		wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
-		wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (262143));
+		wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
-		wifiPhy.SetChannel (channel.Create ());
+		wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+		//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
+
 		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
+		wifiPhy.SetChannel (wifiChannel.Create ());
 		wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
+//		wifiPhy.Set ("TxPowerStart", DoubleValue (10.0));
+//		wifiPhy.Set ("TxPowerEnd", DoubleValue (10.0));
+//		wifiPhy.Set ("TxPowerLevels", UintegerValue (1));
+//		wifiPhy.Set ("TxGain", DoubleValue (0));
+//		wifiPhy.Set ("RxGain", DoubleValue (0));
+//		wifiPhy.Set ("RxNoiseFigure", DoubleValue (10));
+//		wifiPhy.Set ("CcaMode1Threshold", DoubleValue (-79));
+//		wifiPhy.Set ("EnergyDetectionThreshold", DoubleValue (-79 + 3));
 
-		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
-		m2DAntenna->SetMode(10);
-
-		//Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
-		//coneAntenna->SetGainDbi(0);
-		//coneAntenna->GainDbiToBeamwidth(0);
+		if(use2DAntenna)
+		{
+			Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
+			m2DAntenna->SetMode(10);
+		}
+		else
+		{
+			Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
+			coneAntenna->SetGainDbi(0);
+			coneAntenna->GainDbiToBeamwidth(0);
+		}
 
 		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
 		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes.Get(i));
@@ -215,13 +247,16 @@ int main (int argc, char *argv[])
 			onoff.SetConstantRate (DataRate (dataRate));
 
 			NS_LOG_UNCOND ("Starting Apps on ENB " << i);
-			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
-			apps.Start (Seconds (serverStartTime));
+			ApplicationContainer sinkApp = onoff.Install (enbNodes.Get(i));
 
-			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-			apps = sink.Install (ueNodes.Get(u));
-			apps.Start (Seconds (serverStartTime));
+			PacketSinkHelper sinkHelper = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
+			sinkApp = sinkHelper.Install (ueNodes.Get(u));
+			sink = StaticCast<PacketSink> (sinkApp.Get (0));
+
+			sinkApp.Start (Seconds (serverStartTime));
 		}
+
+		Simulator::Schedule (Seconds (serverStartTime), &CalculateThroughput); // Calculate Throughput
 	}
 
 	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -271,9 +306,10 @@ int main (int argc, char *argv[])
 	BuildingsHelper::Install (ueNodes);
 
 /////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
+	std::cout << std::endl;
+	NS_LOG_UNCOND ("//////////////////////////");
 	NS_LOG_UNCOND ("==> Starting Simulation...");
-/////////////////////////////////////////////////////
+	NS_LOG_UNCOND ("//////////////////////////");
 /////////////////////////////////////////////////////
 
 	std::cout << std::endl;
@@ -287,6 +323,8 @@ int main (int argc, char *argv[])
 	std::cout << "========================= " << "\n\n";
 
 	Simulator::Stop (Seconds (simulationTime));
+	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
+	time_t tempoInicio = time(NULL);
 
 	if (tracing)
 	{
@@ -294,25 +332,25 @@ int main (int argc, char *argv[])
 		wifiPhy.EnablePcapAll (outFile, true);
 	}
 
-	FlowMonitorHelper flowmon;
-	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
-
 	Simulator::Run ();
+
 	if(flowmonitor)
 	{
-//		AnimationInterface anim (outFile+"_anim.xml");
+//		AnimationInterface anim (outFile+"_netAnim.xml");
 //	 	anim.SetConstantPosition (wifiApNode, 0.0, 0.0);
 //	 	anim.SetConstantPosition (ueNode, distanceXUe, distanceYUe);
 
+		monitor->SerializeToXmlFile (outFile+"_flowMonitor.xml", true, true);
 		monitor->CheckForLostPackets ();
-		monitor->SerializeToXmlFile (outFile+"_monitor.xml", true, true);
 
 		Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
 		FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
+		std::cout << std::endl;
+
 		for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 		{
 			Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
-			std::cout << "Flow " << i->first - 2 << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
+			std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
 			std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
 			std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
 			std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
@@ -321,8 +359,24 @@ int main (int argc, char *argv[])
 			std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / 9.0 / 1000 / 1000  << " Mbps\n";
 		}
 	}
+
+	std::cout << std::endl;
+	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " seconds\n";
 	Simulator::Destroy ();
+
+	time_t tempoFinal 	= time(NULL);
+	double tempoTotal 	= difftime(tempoFinal, tempoInicio);
+	std::cout << "Real time: " << tempoTotal << " seconds   ~ " << (uint32_t)tempoTotal / 60 << " min\n\n";
 
 	return 0;
 }
 
+void
+CalculateThroughput ()
+{
+  Time now = Simulator::Now ();
+  double MBits = (sink->GetTotalRx() - lastTotalRx) * (double) 8/1e5;
+  std::cout << now.GetSeconds () << "s: \t" << MBits << " Mbit/s" << std::endl;
+  lastTotalRx = sink->GetTotalRx ();
+  Simulator::Schedule (MilliSeconds (100), &CalculateThroughput);
+}
