@@ -289,7 +289,6 @@ int main (int argc, char *argv[])
 
 	if (tracing)
 	{
-	  //p2p.EnablePcapAll (outFile);
 	  ////wifiPhy.EnablePcap (outFile, enbApdevice.Get (0));
 		wifiPhy.EnablePcapAll (outFile, true);
 	}
