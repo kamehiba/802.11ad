@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
 	double ueSpeed						= 1.0; // m/s.
 
 	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 3;
+	uint16_t numUe 						= 2;
 
 	std::string outFile 				= "debug";
 
@@ -96,7 +96,7 @@ int main (int argc, char *argv[])
 	// turn off RTS/CTS for frames below 2200 bytes
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
 
-	/// Set to true if this interface should respond to interface events by globallly recomputing routes
+	// Set to true if this interface should respond to interface events by globallly recomputing routes
 	Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
 
 ///////////////////////////////////////////////
@@ -139,8 +139,8 @@ int main (int argc, char *argv[])
 	internet.Install(enbNodes);
 	internet.Install(ueNodes);
 
-	ipv4Enb.SetBase ("1.0.0.0", "255.255.255.0");
-	ipv4UE.SetBase ("2.0.0.0", "255.255.255.0");
+	ipv4Enb.SetBase ("1.0.0.0", "255.0.0.0");
+	ipv4UE.SetBase ("2.0.0.0", "255.0.0.0");
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -174,42 +174,53 @@ int main (int argc, char *argv[])
 		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
 		wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
 
-		//Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
-		//m2DAntenna->SetMode(10);
+		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
+		m2DAntenna->SetMode(10);
 
-		Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
-		coneAntenna->SetGainDbi(0);
-		coneAntenna->GainDbiToBeamwidth(0);
+		//Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
+		//coneAntenna->SetGainDbi(0);
+		//coneAntenna->GainDbiToBeamwidth(0);
+
+		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
+		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes.Get(i));
+		wifiApInterface = ipv4Enb.Assign (enbApdevice);
 
 		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
 		ueWifiDevice = wifi.Install (wifiPhy, wifiMac, ueNodes);
 		wifiUeIPInterface = ipv4UE.Assign (ueWifiDevice);
 
-		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-		enbApdevice = wifi.Install (wifiPhy, wifiMac, enbNodes);
-		wifiApInterface = ipv4Enb.Assign (enbApdevice);
-	}
+		//////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////
+			NS_LOG_UNCOND ("==> Assigning Routing Tables on ENB " << i);
+		/////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning Routing Tables");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	for (uint32_t u = 0; u < enbNodes.GetN (); ++u)
-	{
-		Ptr<Node> enb = enbNodes.Get (u);
+		Ptr<Node> enb = enbNodes.Get (i);
 		Ptr<Ipv4StaticRouting> enbStaticRouting = ipv4RoutingHelper.GetStaticRouting (enb->GetObject<Ipv4> ());
-		enbStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//UEnode
-		enbStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//enbNode
-	}
+		enbStaticRouting->AddHostRouteTo(wifiUeIPInterface.GetAddress(0),1);
+		enbStaticRouting->AddNetworkRouteTo("2.0.0.0","255.0.0.0", 1); //AddNetwork Route To UEnode
 
-	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
-	{
-		Ptr<Node> ue = ueNodes.Get (u);
-		Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
-		ueStaticRouting->AddNetworkRouteTo("1.0.0.0","255.255.255.0",1);//enbNode
-		ueStaticRouting->AddNetworkRouteTo("2.0.0.0","255.255.255.0",1);//UEnode
+		for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+		{
+			NS_LOG_UNCOND ("==> Assigning Routing Tables on UE " << u);
+			Ptr<Node> ue = ueNodes.Get (u);
+			Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
+			ueStaticRouting->AddHostRouteTo(wifiApInterface.GetAddress(0),i+1);
+			ueStaticRouting->AddNetworkRouteTo("1.0.0.0","255.0.0.0", i+1); //AddNetwork Route To enbNode
+
+			NS_LOG_UNCOND ("Starting Apps on UE Interface " << u);
+			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
+			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
+			onoff.SetConstantRate (DataRate (dataRate));
+
+			NS_LOG_UNCOND ("Starting Apps on ENB " << i);
+			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));
+			apps.Start (Seconds (serverStartTime));
+
+			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
+			apps = sink.Install (ueNodes.Get(u));
+			apps.Start (Seconds (serverStartTime));
+		}
 	}
 
 	//Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -258,29 +269,6 @@ int main (int argc, char *argv[])
 	  (*it)->Initialize ();
 	BuildingsHelper::Install (ueNodes);
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Initializing Applications");//
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	for (uint32_t i = 0; i < ueNodes.GetN (); ++i)
-	{
-		for (uint32_t j = 0; j < enbNodes.GetN (); ++j)
-		{
-			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (i), 9);
-			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
-			onoff.SetConstantRate (DataRate (dataRate));
-
-			ApplicationContainer apps = onoff.Install (enbNodes.Get(j));
-			apps.Start (Seconds (serverStartTime));
-
-			PacketSinkHelper sink = PacketSinkHelper ("ns3::UdpSocketFactory", dst);
-			apps = sink.Install (ueNodes.Get(i));
-			apps.Start (Seconds (serverStartTime));
-		}
-	}
-
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Starting Simulation...");
@@ -313,9 +301,9 @@ int main (int argc, char *argv[])
 	if(flowmonitor)
 	{
 //		AnimationInterface anim (outFile+"_anim.xml");
-//	 	anim.SetConstantPosition (remoteHostWIFI, 0.0, -20.0);
 //	 	anim.SetConstantPosition (wifiApNode, 0.0, 0.0);
 //	 	anim.SetConstantPosition (ueNode, distanceXUe, distanceYUe);
+
 
 		monitor->CheckForLostPackets ();
 		monitor->SerializeToXmlFile (outFile+"_monitor.xml", true, true);
