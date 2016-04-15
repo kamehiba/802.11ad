@@ -1127,6 +1127,20 @@ public:
    * \return MCS 9 from VHT MCS values
    */
   static WifiMode GetVhtMcs9 ();
+
+  static WifiMode GetVhtMcs13a ();
+  static WifiMode GetVhtMcs14a ();
+  static WifiMode GetVhtMcs15a ();
+  static WifiMode GetVhtMcs16a ();
+  static WifiMode GetVhtMcs17a ();
+  static WifiMode GetVhtMcs18a ();
+  static WifiMode GetVhtMcs19a ();
+  static WifiMode GetVhtMcs20a ();
+  static WifiMode GetVhtMcs21a ();
+  static WifiMode GetVhtMcs22a ();
+  static WifiMode GetVhtMcs23a ();
+  static WifiMode GetVhtMcs24a ();
+
   /**
    * The standard disallows certain combinations of WifiMode, number of
    * spatial streams, and channel widths.  This method can be used to

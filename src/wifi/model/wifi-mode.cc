@@ -148,7 +148,7 @@ WifiMode::GetDataRate (uint32_t channelWidth, bool isShortGuardInterval, uint8_t
           break;
         case 2160: //WIFI_MOD_CLASS_80211ad_OFDM
           usableSubCarriers = 336; //Total:512  Usable:336
-          symbolRate = 4125000;
+          symbolRate = 4125  * 1e3;
           break;
         }
 
@@ -221,6 +221,10 @@ WifiMode::GetDataRate (uint32_t channelWidth, bool isShortGuardInterval, uint8_t
         case 160:
           usableSubCarriers = 468;
           break;
+        case 2160: //WIFI_MOD_CLASS_80211ad_OFDM
+          usableSubCarriers = 336; //Total:512  Usable:336
+          symbolRate = 4125  * 1e3;
+          break;
         }
 
       double codingRate;
@@ -237,6 +241,15 @@ WifiMode::GetDataRate (uint32_t channelWidth, bool isShortGuardInterval, uint8_t
           break;
         case WIFI_CODE_RATE_1_2:
           codingRate = (1.0 / 2.0);
+          break;
+        case WIFI_CODE_RATE_5_8:
+          codingRate = (5.0 / 8.0);
+          break;
+        case WIFI_CODE_RATE_1_4:
+          codingRate = (1.0 / 4.0);
+          break;
+        case WIFI_CODE_RATE_13_16:
+          codingRate = (13.0 / 16.0);
           break;
         case WIFI_CODE_RATE_UNDEFINED:
         default:
@@ -293,17 +306,31 @@ WifiMode::GetCodeRate (void) const
         case 0:
         case 1:
         case 3:
+        case 13:
+        case 15:
+        case 18:
           return WIFI_CODE_RATE_1_2;
         case 2:
         case 4:
         case 6:
         case 8:
+        case 17:
+        case 20:
+        case 23:
           return WIFI_CODE_RATE_3_4;
         case 5:
           return WIFI_CODE_RATE_2_3;
         case 7:
         case 9:
           return WIFI_CODE_RATE_5_6;
+        case 14:
+        case 16:
+        case 19:
+        case 22:
+          return WIFI_CODE_RATE_5_8;
+        case 21:
+        case 24:
+          return WIFI_CODE_RATE_13_16;
         default:
           return WIFI_CODE_RATE_UNDEFINED;
         }
@@ -343,16 +370,28 @@ WifiMode::GetConstellationSize (void) const
       switch (item->mcsValue)
         {
         case 0:
+        case 13:
+        case 14:
           return 2;
         case 1:
         case 2:
+        case 15:
+        case 16:
+        case 17:
           return 4;
         case 3:
         case 4:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
           return 16;
         case 5:
         case 6:
         case 7:
+        case 22:
+        case 23:
+        case 24:
           return 64;
         case 8:
         case 9:
@@ -625,7 +664,7 @@ WifiModeFactory::CreateWifiMcs (std::string uniqueName,
   item->modClass = modClass;
 
   //The modulation class must be either HT or VHT
-  NS_ASSERT (modClass == WIFI_MOD_CLASS_HT || modClass == WIFI_MOD_CLASS_VHT);
+  NS_ASSERT (modClass == WIFI_MOD_CLASS_HT || modClass == WIFI_MOD_CLASS_VHT || modClass == WIFI_MOD_CLASS_80211ad_OFDM);
 
   item->mcsValue = mcsValue;
   //fill unused items with dummy values

@@ -395,6 +395,7 @@ WifiRemoteStationManager::SetupPhy (Ptr<WifiPhy> phy)
   //acknowledgements.
   m_wifiPhy = phy;
   m_defaultTxMode = phy->GetMode (0);
+
   if (HasHtSupported () || HasVhtSupported ())
     {
       m_defaultTxMcs = phy->GetMcs (0);

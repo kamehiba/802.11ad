@@ -58,7 +58,7 @@ int main (int argc, char *argv[])
 
 	double serverStartTime				= 0.05;
 
-	std::string dataRate 				= "512kb/s"; // 1Gb/s = 1000000kb/s         512kb/s
+	std::string dataRate 				= "200Mb/s"; // 1Gb/s = 1000000kb/s         512kb/s
 
 	uint32_t wifiChannelNumber			= 1;
 
@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
 	double ueSpeed						= 1.0; // m/s.
 
 	uint16_t numEnb 					= 1;
-	uint16_t numUe 						= 2;
+	uint16_t numUe 						= 1;
 
 	std::string outFile 				= "debug";
 
@@ -212,7 +212,7 @@ int main (int argc, char *argv[])
 			NS_LOG_UNCOND ("Starting Apps on UE Interface " << u);
 			InetSocketAddress dst = InetSocketAddress (wifiUeIPInterface.GetAddress (u), 9);
 			OnOffHelper onoff = OnOffHelper ("ns3::UdpSocketFactory", dst);
-			onoff.SetConstantRate (DataRate (dataRate));
+			//onoff.SetConstantRate (DataRate (dataRate));
 
 			NS_LOG_UNCOND ("Starting Apps on ENB " << i);
 			ApplicationContainer apps = onoff.Install (enbNodes.Get(i));

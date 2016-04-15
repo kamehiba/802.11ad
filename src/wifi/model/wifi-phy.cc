@@ -1237,7 +1237,7 @@ WifiPhy::GetOfdmRate700Mbps () //MCS 13  <> dataRate:693000000   phyRate:1386000
 }
 
 WifiMode
-WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:866250000   phyRate:
+WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:866250000   phyRate:1386000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate900Mbps",
@@ -1249,7 +1249,7 @@ WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:866250000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 1386000000   phyRate:
+WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 1386000000   phyRate:2772000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1400Mbps",
@@ -1261,7 +1261,7 @@ WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 1386000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:1732500000   phyRate:
+WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:1732500000   phyRate:27720000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1700Mbps",
@@ -1273,7 +1273,7 @@ WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:1732500000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:2079000000   phyRate:
+WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:2079000000   phyRate:2772000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2Gbps",
@@ -1285,7 +1285,7 @@ WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:2079000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:2772000000   phyRate:1249032704
+WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:2772000000   phyRate:5544000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2700Mbps",
@@ -1297,7 +1297,7 @@ WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:2772000000   phyRate:1249
 }
 
 WifiMode
-WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:3465000000   phyRate:
+WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:3465000000   phyRate:5544000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate3400Mbps",
@@ -1309,7 +1309,7 @@ WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:3465000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:4158000000   phyRate:
+WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:4158000000   phyRate:5544000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4200Mbps",
@@ -1321,7 +1321,7 @@ WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:4158000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:4504500000   phyRate:
+WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:4504500000   phyRate:5544000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4500Mbps",
@@ -1333,7 +1333,7 @@ WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:4504500000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:5197500000   phyRate:
+WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:5197500000   phyRate:8316000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate5200Mbps",
@@ -1345,7 +1345,7 @@ WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:5197500000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:6237000000   phyRate:
+WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:6237000000   phyRate:8316000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate6200Mbps",
@@ -1357,12 +1357,12 @@ WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:6237000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate7Gbps () //MCS 24   <> dataRate:6756750000   phyRate:
+WifiPhy::GetOfdmRate7Gbps () //MCS 24   <> dataRate:6756750000   phyRate:8316000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate7Gbps",
                                      WIFI_MOD_CLASS_80211ad_OFDM,
-                                     false, //OFDM MCS13-17 mandatory
+                                     true, //OFDM MCS13-17 mandatory
                                      WIFI_CODE_RATE_13_16,//codingRate
                                      64);//constellationSize
   return mode;
@@ -1709,6 +1709,102 @@ WifiPhy::GetVhtMcs9 ()
   return mcs;
 }
 
+WifiMode
+WifiPhy::GetVhtMcs13a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs13a", 13, WIFI_MOD_CLASS_VHT); //802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs14a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs14a", 14, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs15a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs15a", 15, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs16a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs16a", 16, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs17a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs17a", 17, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs18a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs18a", 18, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs19a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs19a", 19, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs20a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs20a", 20, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs21a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs21a", 21, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs22a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs22a", 22, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs23a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs23a", 23, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
+WifiMode
+WifiPhy::GetVhtMcs24a ()
+{
+  static WifiMode mcs =
+    WifiModeFactory::CreateWifiMcs ("VhtMcs24a", 24, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+  return mcs;
+}
+
 bool
 WifiPhy::IsValidTxVector (WifiTxVector txVector)
 {
@@ -1866,6 +1962,18 @@ public:
     ns3::WifiPhy::GetVhtMcs7 ();
     ns3::WifiPhy::GetVhtMcs8 ();
     ns3::WifiPhy::GetVhtMcs9 ();
+    ns3::WifiPhy::GetVhtMcs13a ();
+    ns3::WifiPhy::GetVhtMcs14a ();
+    ns3::WifiPhy::GetVhtMcs15a ();
+    ns3::WifiPhy::GetVhtMcs16a ();
+    ns3::WifiPhy::GetVhtMcs17a ();
+    ns3::WifiPhy::GetVhtMcs18a ();
+    ns3::WifiPhy::GetVhtMcs19a ();
+    ns3::WifiPhy::GetVhtMcs20a ();
+    ns3::WifiPhy::GetVhtMcs21a ();
+    ns3::WifiPhy::GetVhtMcs22a ();
+    ns3::WifiPhy::GetVhtMcs23a ();
+    ns3::WifiPhy::GetVhtMcs24a ();
   }
 } g_constructor;
 

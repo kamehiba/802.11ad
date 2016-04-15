@@ -894,6 +894,19 @@ YansWifiPhy::Configure80211ad_OFDM (void) //802.11ad
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate5200Mbps ());
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate6200Mbps ());
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate7Gbps ());
+
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs13a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs14a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs15a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs16a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs17a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs18a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs19a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs20a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs21a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs22a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs23a ());
+  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs24a ());
 }
 
 void

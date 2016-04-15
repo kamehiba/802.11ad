@@ -55,7 +55,7 @@ SensitivityModel60GHz::SensitivityModel60GHz ()
 double 
 SensitivityModel60GHz::GetChunkSuccessRate (WifiMode mode, WifiTxVector txVector, double snr, uint32_t nbits) const
 {
-	NS_ASSERT_MSG(mode.GetModulationClass() == WIFI_MOD_CLASS_80211ad_OFDM, "Expecting 802.11ad OFDM modulation");
+	NS_ASSERT_MSG(mode.GetModulationClass() == WIFI_MOD_CLASS_80211ad_OFDM, "Expecting 802.11ad OFDM modulation: "  << mode.GetUniqueName());
 
 	std::string modename = mode.GetUniqueName();
 
@@ -110,29 +110,29 @@ SensitivityModel60GHz::GetChunkSuccessRate (WifiMode mode, WifiTxVector txVector
 //	else if (modename == "VHTMCS18")
 //		rss_delta = rss - -40;	/* Basis: 256 is 6 dB worse than 64 */
 	/**** OFDM PHY ****/
-	if (modename == "OfdmRate700Mbps")
+	if (modename == "OfdmRate700Mbps" || modename == "VhtMcs13a")
 		rss_delta = rss - -66;
-	else if (modename == "OfdmRate900Mbps")
+	else if (modename == "OfdmRate900Mbps" || modename == "VhtMcs14a")
 		rss_delta = rss - -64;
-	else if (modename == "OfdmRate1400Mbps")
+	else if (modename == "OfdmRate1400Mbps" || modename == "VhtMcs15a")
 		rss_delta = rss - -63;
-	else if (modename == "OfdmRate1700Mbps")
+	else if (modename == "OfdmRate1700Mbps" || modename == "VhtMcs16a")
 		rss_delta = rss - -62;
-	else if (modename == "OfdmRate2Gbps")
+	else if (modename == "OfdmRate2Gbps" || modename == "VhtMcs17a")
 		rss_delta = rss - -60;
-	else if (modename == "OfdmRate2700Mbps")
+	else if (modename == "OfdmRate2700Mbps" || modename == "VhtMcs18a")
 		rss_delta = rss - -58;
-	else if (modename == "OfdmRate3400Mbps")
+	else if (modename == "OfdmRate3400Mbps" || modename == "VhtMcs19a")
 		rss_delta = rss - -56;
-	else if (modename == "OfdmRate4200Mbps")
+	else if (modename == "OfdmRate4200Mbps" || modename == "VhtMcs20a")
 		rss_delta = rss - -54;
-	else if (modename == "OfdmRate4500Mbps")
+	else if (modename == "OfdmRate4500Mbps" || modename == "VhtMcs21a")
 		rss_delta = rss - -53;
-	else if (modename == "OfdmRate5200Mbps")
+	else if (modename == "OfdmRate5200Mbps" || modename == "VhtMcs22a")
 		rss_delta = rss - -51;
-	else if (modename == "OfdmRate6200Mbps")
+	else if (modename == "OfdmRate6200Mbps" || modename == "VhtMcs23a")
 		rss_delta = rss - -49;
-	else if (modename == "OfdmRate7Gbps")
+	else if (modename == "OfdmRate7Gbps" || modename == "VhtMcs24a")
 		rss_delta = rss - -47;
 //	/**** Low power PHY ****/
 //	else if (modename == "VHTMCS25a")
