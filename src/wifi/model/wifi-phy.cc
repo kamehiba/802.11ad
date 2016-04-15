@@ -1225,7 +1225,7 @@ WifiPhy::GetOfdmRate13_5MbpsBW5MHz ()
 //802.11ad
 
 WifiMode
-WifiPhy::GetOfdmRate700Mbps () //MCS 13  <> dataRate:42000000   phyRate:84000000
+WifiPhy::GetOfdmRate700Mbps () //MCS 13  <> dataRate:693000000   phyRate:1386000000
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate700Mbps",
@@ -1237,7 +1237,7 @@ WifiPhy::GetOfdmRate700Mbps () //MCS 13  <> dataRate:42000000   phyRate:84000000
 }
 
 WifiMode
-WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:52500000   phyRate:
+WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:866250000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate900Mbps",
@@ -1249,7 +1249,7 @@ WifiPhy::GetOfdmRate900Mbps () //MCS 14  <> dataRate:52500000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 84000000   phyRate:
+WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 1386000000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1400Mbps",
@@ -1261,7 +1261,7 @@ WifiPhy::GetOfdmRate1400Mbps () //MCS 15  <> dataRate = 84000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:105000000   phyRate:
+WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:1732500000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate1700Mbps",
@@ -1273,7 +1273,7 @@ WifiPhy::GetOfdmRate1700Mbps () //MCS 16  <> dataRate:105000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:126000000   phyRate:
+WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:2079000000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2Gbps",
@@ -1285,7 +1285,7 @@ WifiPhy::GetOfdmRate2Gbps () //MCS 17   <> dataRate:126000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:168000000   phyRate:
+WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:2772000000   phyRate:1249032704
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate2700Mbps",
@@ -1297,7 +1297,7 @@ WifiPhy::GetOfdmRate2700Mbps () //MCS 18   <> dataRate:168000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:210000000   phyRate:
+WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:3465000000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate3400Mbps",
@@ -1309,7 +1309,7 @@ WifiPhy::GetOfdmRate3400Mbps () //MCS 19   <> dataRate:210000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:252000000   phyRate:
+WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:4158000000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4200Mbps",
@@ -1321,7 +1321,7 @@ WifiPhy::GetOfdmRate4200Mbps () //MCS 20   <> dataRate:252000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:273000000   phyRate:
+WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:4504500000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate4500Mbps",
@@ -1333,7 +1333,7 @@ WifiPhy::GetOfdmRate4500Mbps () //MCS 21   <> dataRate:273000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:315000000   phyRate:
+WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:5197500000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate5200Mbps",
@@ -1345,7 +1345,7 @@ WifiPhy::GetOfdmRate5200Mbps () //MCS 22   <> dataRate:315000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:378000000   phyRate:
+WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:6237000000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate6200Mbps",
@@ -1357,7 +1357,7 @@ WifiPhy::GetOfdmRate6200Mbps () //MCS 23   <> dataRate:378000000   phyRate:
 }
 
 WifiMode
-WifiPhy::GetOfdmRate7Gbps () //MCS 24   <> dataRate:409500000   phyRate:
+WifiPhy::GetOfdmRate7Gbps () //MCS 24   <> dataRate:6756750000   phyRate:
 {
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate7Gbps",

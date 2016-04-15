@@ -148,6 +148,7 @@ WifiMode::GetDataRate (uint32_t channelWidth, bool isShortGuardInterval, uint8_t
           break;
         case 2160: //WIFI_MOD_CLASS_80211ad_OFDM
           usableSubCarriers = 336; //Total:512  Usable:336
+          symbolRate = 4125000;
           break;
         }
 

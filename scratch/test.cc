@@ -59,7 +59,7 @@ int main (int argc, char *argv[])
 {
 	//LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
-	double simulationTime				= 0.3;
+	double simulationTime				= 1;
 
 	bool use2DAntenna					= true;
 
@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
 
 	double serverStartTime				= 0.0;
 
-	std::string dataRate 				= "45Mb/s"; // 1Gb/s = 1000000kb/s         512kb/s
+	std::string dataRate 				= "1Gb/s"; // 1Gb/s = 1000000kb/s         512kb/s
 
 	uint32_t wifiChannelNumber			= 1;
 	uint32_t maxAmsduSize				= 999999;//262143;
@@ -184,7 +184,7 @@ int main (int argc, char *argv[])
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
 		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
 		//wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
-		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
+		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate700Mbps"));
 
 		wifiMac.SetType ("ns3::FlywaysWifiMac");
 		//wifiMac.SetType ("ns3::AdhocWifiMac");
@@ -316,7 +316,7 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
 	NS_LOG_UNCOND ("//////////////////////////");
-	NS_LOG_UNCOND ("==> Starting Simulation...");
+	NS_LOG_UNCOND ("==> Starting Simulation <==");
 	NS_LOG_UNCOND ("//////////////////////////");
 /////////////////////////////////////////////////////
 
