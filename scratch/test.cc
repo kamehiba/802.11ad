@@ -51,25 +51,27 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 Ptr<PacketSink> sink;                         /* Pointer to the packet sink application */
 uint64_t lastTotalRx = 0;                     /* The value of the last total received bytes */
 
+//void PointAntenna(Ptr<WifiNetDevice>,double);
+//void PointAtEachOther(uint32_t,uint32_t);
 void CalculateThroughput ();
 
 int main (int argc, char *argv[])
 {
 	//LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
-	double simulationTime				= 2;
+	double simulationTime				= 0.3;
 
 	bool use2DAntenna					= true;
 
 	bool tracing						= false;
 	bool flowmonitor					= true;
 
-	double serverStartTime				= 0.05;
+	double serverStartTime				= 0.0;
 
-	std::string dataRate 				= "1Gb/s"; // 1Gb/s = 1000000kb/s         512kb/s
+	std::string dataRate 				= "45Mb/s"; // 1Gb/s = 1000000kb/s         512kb/s
 
 	uint32_t wifiChannelNumber			= 1;
-	uint32_t maxAmsduSize				= 262143;
+	uint32_t maxAmsduSize				= 999999;//262143;
 
 	double BoxXmin						= 0;
 	double BoxXmax						= 5;
@@ -84,10 +86,10 @@ int main (int argc, char *argv[])
 
 	double ueSpeed						= 1.0; // m/s.
 
-	uint32_t numEnb 					= 1;
-	uint32_t numUe 						= 2;
+	uint32_t nEnb 						= 1;
+	uint32_t nUe 						= 1;
 
-	std::string outFile 				= "debug";
+	std::string outFileName				= "debug";
 
 	FlowMonitorHelper 					flowmon;
 	Ipv4InterfaceContainer 				wifiApInterface, wifiUeIPInterface;
@@ -105,6 +107,7 @@ int main (int argc, char *argv[])
 	/* No fragmentation and no RTS/CTS */
 	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("999999"));
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("999999"));
+    Config::SetDefault ("ns3::OnOffApplication::DataRate", DataRateValue(DataRate(dataRate)));
 
 	// Set to true if this interface should respond to interface events by globallly recomputing routes
 	//Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
@@ -124,7 +127,9 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Checking Variables");
 ///////////////////////////////////////////////
 
-	NS_ASSERT (numEnb > 0 && numUe > 0);
+	NS_ASSERT (nEnb > 0 && nUe > 0);
+	NS_ASSERT (nFemtocells > 0);
+	NS_ASSERT (serverStartTime < simulationTime);
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Area");
@@ -147,10 +152,10 @@ int main (int argc, char *argv[])
 ///////////////////////////////////////////////////////////
 
 	NodeContainer enbNodes;
-	enbNodes.Create(numEnb);
+	enbNodes.Create(nEnb);
 
 	NodeContainer ueNodes;
-	ueNodes.Create(numUe);
+	ueNodes.Create(nUe);
 
 	internet.Install(enbNodes);
 	internet.Install(ueNodes);
@@ -164,9 +169,9 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
-	QosWifiMacHelper		wifiMac 	= QosWifiMacHelper::Default ();
+	YansWifiPhyHelper 		wifiPhy =  YansWifiPhyHelper::Default ();
+	QosWifiMacHelper 		wifiMac = QosWifiMacHelper::Default ();
+	YansWifiChannelHelper 	wifiChannel;
 	WifiHelper 				wifi;
 
 	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
@@ -177,30 +182,33 @@ int main (int argc, char *argv[])
 		//Ssid ssid = Ssid ("ns3-wifi");
 
 		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
-		wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
 		//wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
-		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate700Mbps"));
+		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
 
-		wifiMac.SetType ("ns3::AdhocWifiMac");
+		wifiMac.SetType ("ns3::FlywaysWifiMac");
+		//wifiMac.SetType ("ns3::AdhocWifiMac");
 
 		////video trasmission
 		wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
 		wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
 		wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-		//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
+		//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
+		wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
 
-		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
 		wifiPhy.SetChannel (wifiChannel.Create ());
+		wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
+		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
 		wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
-//		wifiPhy.Set ("TxPowerStart", DoubleValue (10.0));
-//		wifiPhy.Set ("TxPowerEnd", DoubleValue (10.0));
-//		wifiPhy.Set ("TxPowerLevels", UintegerValue (1));
 //		wifiPhy.Set ("TxGain", DoubleValue (0));
 //		wifiPhy.Set ("RxGain", DoubleValue (0));
-//		wifiPhy.Set ("RxNoiseFigure", DoubleValue (10));
-//		wifiPhy.Set ("CcaMode1Threshold", DoubleValue (-79));
-//		wifiPhy.Set ("EnergyDetectionThreshold", DoubleValue (-79 + 3));
+		wifiPhy.Set ("TxPowerStart", DoubleValue(10.0));
+		wifiPhy.Set ("TxPowerEnd", DoubleValue(10.0));
+		wifiPhy.Set ("TxPowerLevels", UintegerValue(1));
+		wifiPhy.Set ("RxNoiseFigure", DoubleValue(0));
+		wifiPhy.Set ("CcaMode1Threshold", DoubleValue (-79) );
+		wifiPhy.Set ("EnergyDetectionThreshold", DoubleValue (-79+3) );
 
 		if(use2DAntenna)
 		{
@@ -210,8 +218,8 @@ int main (int argc, char *argv[])
 		else
 		{
 			Ptr<ConeAntenna> coneAntenna = CreateObject<ConeAntenna>();
-			coneAntenna->SetGainDbi(0);
-			coneAntenna->GainDbiToBeamwidth(0);
+			coneAntenna->SetGainDbi(10);
+			coneAntenna->GainDbiToBeamwidth(10);
 		}
 
 		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
@@ -313,13 +321,14 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 
 	std::cout << std::endl;
-	std::cout << "========================= " << "\n";
-	std::cout << "eNB: " << numEnb << "\n";
-	std::cout << "UE: " << numUe << "\n";
+	std::cout << "========CONFIGS========== " << "\n";
+	std::cout << "eNB: " << nEnb << "\n";
+	std::cout << "UE: " << nUe << "\n";
 	std::cout << "UE Speed: " << ueSpeed << "m/s" << " <> " << ueSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
+	std::cout << "Simulation Time: " << simulationTime << " seconds\n";
 	std::cout << "========================= " << "\n\n";
 
 	Simulator::Stop (Seconds (simulationTime));
@@ -329,10 +338,14 @@ int main (int argc, char *argv[])
 	if (tracing)
 	{
 	  ////wifiPhy.EnablePcap (outFile, enbApdevice.Get (0));
-		wifiPhy.EnablePcapAll (outFile, true);
+		wifiPhy.EnablePcapAll (outFileName, true);
 	}
 
 	Simulator::Run ();
+
+	double averageThroughput = ((sink->GetTotalRx() * 8) / (1e6  * simulationTime));
+	std::cout << "\nAverage throughtput: " << averageThroughput << " Mbps" << std::endl;
+	std::cout << "Average throughtput: " << averageThroughput/1024 << " Gbps" << std::endl;
 
 	if(flowmonitor)
 	{
@@ -340,7 +353,7 @@ int main (int argc, char *argv[])
 //	 	anim.SetConstantPosition (wifiApNode, 0.0, 0.0);
 //	 	anim.SetConstantPosition (ueNode, distanceXUe, distanceYUe);
 
-		monitor->SerializeToXmlFile (outFile+"_flowMonitor.xml", true, true);
+		monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
 		monitor->CheckForLostPackets ();
 
 		Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
@@ -371,12 +384,35 @@ int main (int argc, char *argv[])
 	return 0;
 }
 
-void
-CalculateThroughput ()
+//void PointAntenna(Ptr<WifiNetDevice> wnd, double angle)
+//{
+//  Ptr<YansWifiPhy> phy = DynamicCast<YansWifiPhy>(wnd->GetPhy());
+//  Ptr<ConeAntenna> ca = DynamicCast<ConeAntenna>(phy->GetAntenna());
+//  ca->SetAzimuthAngle(angle);
+//}
+//
+//void PointAtEachOther(uint32_t a, uint32_t b)
+//{
+//  double angle = GetAngle(loc[a][0], loc[a][1], loc[b][0], loc[b][1]);
+//  std::cout << angle << std::endl;
+//  Ptr<WifiNetDevice> first = DynamicCast<WifiNetDevice>(devices.Get(a));
+//  PointAntenna(first, angle);
+//  Ptr<WifiNetDevice> second = DynamicCast<WifiNetDevice>(devices.Get(b));
+//  angle = GetAngle(loc[b][0], loc[b][1], loc[a][0], loc[a][1]);
+//  PointAntenna(second, angle);
+//}
+
+void CalculateThroughput ()
 {
   Time now = Simulator::Now ();
-  double MBits = (sink->GetTotalRx() - lastTotalRx) * (double) 8/1e5;
-  std::cout << now.GetSeconds () << "s: \t" << MBits << " Mbit/s" << std::endl;
+  double Mbps = (sink->GetTotalRx() - lastTotalRx) * (double) 8/1e5;
+  //double Gbps = Mbps / 1024;
+  //double Kbps = Mbps * 1024;
+
+  //std::cout << now.GetSeconds () << "s: \t" << Kbps << " Kbps" << std::endl;
+  std::cout << now.GetSeconds () << "s: \t" << Mbps << " Mbps" << std::endl;
+  //std::cout << now.GetSeconds () << "s: \t" << Gbps << " Gbps" << std::endl;
+
   lastTotalRx = sink->GetTotalRx ();
   Simulator::Schedule (MilliSeconds (100), &CalculateThroughput);
 }

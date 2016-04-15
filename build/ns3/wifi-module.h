@@ -33,6 +33,7 @@
 #include "erp-information.h"
 #include "error-rate-model.h"
 #include "femtocellBlockAllocator.h"
+#include "flyways-wifi-mac.h"
 #include "ht-capabilities.h"
 #include "ht-operations.h"
 #include "ht-wifi-mac-helper.h"
