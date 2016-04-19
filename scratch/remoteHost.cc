@@ -91,16 +91,16 @@ int main (int argc, char *argv[])
 	Ipv4Mask	netMask					= "255.0.0.0";
 
 	//WIFI Vars
-	//bool use2DAntenna					= false;
+	bool use2DAntenna					= true;
 	uint32_t wifiChannelNumber			= 1;
 	uint32_t nTxAntennas 				= 1;
 	uint32_t nRxAntennas				= 1;
 	uint32_t maxAmsduSize				= 999999;//262143;
 
 	//Node Vars
-	double ueSpeed						= 1.0; // m/s.
-	uint16_t nEnb 						= 1;
-	uint16_t nUe 						= 1;
+	double ueSpeed						= 1.0; 	// m/s.
+	uint16_t nAcpoints 					= 1; 	// Access Points
+	uint16_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
 
@@ -116,10 +116,9 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Setting Up Configs");
 ///////////////////////////////////////////////
 
-	// disable fragmentation for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
-	// turn off RTS/CTS for frames below 2200 bytes
-	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+	/* No fragmentation and no RTS/CTS */
+	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("99999"));
+	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("99999"));
 
 	Config::SetDefault ("ns3::OnOffApplication::DataRate", DataRateValue(DataRate(dataRate)));
     Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (packetSize));
@@ -135,8 +134,8 @@ int main (int argc, char *argv[])
 
 	CommandLine cmd;
 	cmd.AddValue("simulationTime", "Simulation Time: ", simulationTime);
-	cmd.AddValue("nEnb", "How many ENBs: ", nEnb);
-	cmd.AddValue("nUe", "How many UEs: ", nUe);
+	cmd.AddValue("nEnb", "How many ENBs: ", nAcpoints);
+	cmd.AddValue("nUe", "How many UEs: ", nStations);
 	cmd.AddValue("dataRate", "Data Rate: ", dataRate);
 	cmd.AddValue("packetSize", "Packet Size: ", packetSize);
 	cmd.AddValue("verbose", "Verbose: ", verbose);
@@ -149,7 +148,7 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Checking Variables");
 ///////////////////////////////////////////////
 
-	NS_ASSERT (nEnb > 0 && nUe > 0);
+	NS_ASSERT (nAcpoints > 0 && nStations > 0);
 	NS_ASSERT (nFemtocells > 0);
 	NS_ASSERT (serverStartTime < simulationTime);
 
@@ -181,11 +180,11 @@ int main (int argc, char *argv[])
 	routerContainer.Create (1);
 	Ptr<Node> router = routerContainer.Get (0);
 
-	NodeContainer enbNodes;
-	enbNodes.Create(nEnb);
+	NodeContainer wifiApNode;
+	wifiApNode.Create(nAcpoints);
 
-	NodeContainer ueNodes;
-	ueNodes.Create(nUe);
+	NodeContainer wifiStatNode;
+	wifiStatNode.Create(nStations);
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -195,8 +194,8 @@ int main (int argc, char *argv[])
 
 	internet.Install(remoteHostContainer);
 	internet.Install(routerContainer);
-	internet.Install(enbNodes);
-	internet.Install(ueNodes);
+	internet.Install(wifiApNode);
+	internet.Install(wifiStatNode);
 
 	ipv4Rh.SetBase (ipRemoteHost, netMask);
 	ipv4Router.SetBase (ipRouter, netMask);
@@ -216,9 +215,9 @@ int main (int argc, char *argv[])
 	remoteHostDevice = p2ph.Install (remoteHost, router);
 	remoteHostInterface	= ipv4Rh.Assign (remoteHostDevice);
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
+	for (uint32_t i = 0; i < wifiApNode.GetN (); ++i)
 	{
-		routerDevice = p2ph.Install (enbNodes.Get(i), router);
+		routerDevice = p2ph.Install (wifiApNode.Get(i), router);
 		routerInterface	= ipv4Router.Assign (routerDevice);
 	}
 
@@ -233,7 +232,7 @@ int main (int argc, char *argv[])
 	QosWifiMacHelper		wifiMac 	= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
-	for (uint32_t i = 0; i < enbNodes.GetN (); ++i)
+	for (uint32_t i = 0; i < wifiApNode.GetN (); ++i)
 	{
 		//////////////////////////////////////////////////
 		NS_LOG_UNCOND ("Innitializing WIFI on ENB-" << i);
@@ -272,10 +271,18 @@ int main (int argc, char *argv[])
 		wifiPhy.Set ("ShortGuardEnabled", BooleanValue (false));// Set guard interval
 
 		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
-		wifiDevice.Add (wifi.Install (wifiPhy, wifiMac, ueNodes));
+		wifiDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiStatNode));
 
 		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-		wifiDevice.Add (wifi.Install (wifiPhy, wifiMac, enbNodes));
+		wifiDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiApNode));
+
+		if(use2DAntenna)
+		{
+			Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
+			m2DAntenna->SetMode(10);
+
+			wifiDevice.Get(i)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
+		}
 
 		wifiInterface = ipv4Wifi.Assign (wifiDevice);
 	}
@@ -308,7 +315,7 @@ int main (int argc, char *argv[])
 	routermobility.Install(routerContainer);
 	BuildingsHelper::Install (routerContainer);
 
-	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea");
+	NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
 	MobilityHelper enbMobility;
 	Ptr<PositionAllocator> enbPositionAlloc;
 	enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
@@ -325,10 +332,10 @@ int main (int argc, char *argv[])
 	zVal->SetAttribute ("Max", DoubleValue (boxArea.zMax));
 	enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
 	enbMobility.SetPositionAllocator (enbPositionAlloc);
-	enbMobility.Install (enbNodes);
-	BuildingsHelper::Install (enbNodes);
+	enbMobility.Install (wifiApNode);
+	BuildingsHelper::Install (wifiApNode);
 
-	NS_LOG_UNCOND ("Randomly allocating ueNodes inside the boxArea");
+	NS_LOG_UNCOND ("Randomly allocating wifiStatNode inside the boxArea");
 	MobilityHelper uemobility;
 	uemobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinX", 		DoubleValue (boxArea.xMin));
@@ -341,10 +348,10 @@ int main (int argc, char *argv[])
 	Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
 	ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
 	uemobility.SetPositionAllocator (ueRandomPositionAlloc);
-	uemobility.Install (ueNodes);
-	for (NodeContainer::Iterator it = ueNodes.Begin (); it != ueNodes.End (); ++it)
+	uemobility.Install (wifiStatNode);
+	for (NodeContainer::Iterator it = wifiStatNode.Begin (); it != wifiStatNode.End (); ++it)
 	  (*it)->Initialize ();
-	BuildingsHelper::Install (ueNodes);
+	BuildingsHelper::Install (wifiStatNode);
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -352,7 +359,7 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+	for (uint32_t u = 0; u < wifiStatNode.GetN (); ++u)
 	{
 		InetSocketAddress dst = InetSocketAddress (wifiInterface.GetAddress (u), 9);
 		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
@@ -363,7 +370,7 @@ int main (int argc, char *argv[])
 		apps.Start (Seconds (serverStartTime));
 
 		PacketSinkHelper sink = PacketSinkHelper (protocol, dst);
-		apps = sink.Install (ueNodes.Get(u));
+		apps = sink.Install (wifiStatNode.Get(u));
 		apps.Start (Seconds (serverStartTime));
 	}
 
@@ -378,15 +385,16 @@ int main (int argc, char *argv[])
 
 	if (tracing)
 	{
-	  ////wifiPhy.EnablePcap (outFile, enbApdevice.Get (0));
+		//wifiPhy.EnablePcap (outFileName, wifiDevice.Get (0));
 		wifiPhy.EnablePcapAll (outFileName, true);
+		p2ph.EnablePcapAll (outFileName, true);
 	}
 
 	if(netAnim)
 	{
 		AnimationInterface anim (outFileName+"_anim.xml");
 		//anim.SetConstantPosition (wifiApNode, 0.0, 0.0);
-		//anim.SetConstantPosition (ueNode, distanceXUe, distanceYUe);
+		//anim.SetConstantPosition (ueNode, 0.0, 0.0);
 	}
 
 	if(flowmonitor)
@@ -396,13 +404,13 @@ int main (int argc, char *argv[])
 
 		Simulator::Run ();
 
-		showConfigs(nEnb, nUe, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 		flowmonitorOutput(monitor, flowmon, outFileName, simulationTime, packetSize);
 	}
 	else
 	{
 		Simulator::Run ();
-		showConfigs(nEnb, nUe, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 	}
 
 	std::cout << "========================= " << "\n";

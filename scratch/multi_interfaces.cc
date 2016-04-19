@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "300Mbps";
+	std::string dataRate 				= "200Mbps";
 	uint32_t packetSize					= 1024;
 
 	//WIFI Vars

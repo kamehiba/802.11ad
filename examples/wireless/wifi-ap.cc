@@ -135,8 +135,8 @@ int main (int argc, char *argv[])
   NetDeviceContainer staDevs;
   PacketSocketHelper packetSocket;
 
-  stas.Create (2);
-  ap.Create (1);
+  stas.Create (1);
+  ap.Create (2);
 
   // give packet socket powers to nodes.
   packetSocket.Install (stas);
@@ -148,21 +148,20 @@ int main (int argc, char *argv[])
   wifiPhy.SetChannel (wifiChannel.Create ());
   Ssid ssid = Ssid ("wifi-default");
   wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
+
   // setup stas.
-  wifiMac.SetType ("ns3::StaWifiMac",
-                   "Ssid", SsidValue (ssid),
-                   "ActiveProbing", BooleanValue (false));
+  wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (false));
   staDevs = wifi.Install (wifiPhy, wifiMac, stas);
+
   // setup ap.
-  wifiMac.SetType ("ns3::ApWifiMac",
-                   "Ssid", SsidValue (ssid));
+  wifiMac.SetType ("ns3::ApWifiMac", "Ssid", SsidValue (ssid));
   wifi.Install (wifiPhy, wifiMac, ap);
 
   // mobility.
   mobility.Install (stas);
   mobility.Install (ap);
 
-  Simulator::Schedule (Seconds (1.0), &AdvancePosition, ap.Get (0));
+  //Simulator::Schedule (Seconds (1.0), &AdvancePosition, ap.Get (0));
 
   PacketSocketAddress socket;
   socket.SetSingleDevice (staDevs.Get (0)->GetIfIndex ());
@@ -174,7 +173,7 @@ int main (int argc, char *argv[])
 
   ApplicationContainer apps = onoff.Install (stas.Get (0));
   apps.Start (Seconds (0.5));
-  apps.Stop (Seconds (43.0));
+  //apps.Stop (Seconds (43.0));
 
   Simulator::Stop (Seconds (44.0));
 
