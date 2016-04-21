@@ -100,7 +100,7 @@ int main (int argc, char *argv[])
 	//Node Vars
 	double ueSpeed						= 1.0; 	// m/s.
 	uint16_t nAcpoints 					= 1; 	// Access Points
-	uint16_t nStations 					= 1;	// Stations
+	uint16_t nStations 					= 2;	// Stations
 
 	std::string outFileName				= "debug";
 
