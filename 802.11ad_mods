@@ -8,13 +8,13 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 ========================================= PHY LAYER==============================
 
 /src/wifi/model/wifi-phy-standard.h
-            linha 54 adicionei:
+            line 54:
                                 /** OFDM PHY */
                                 WIFI_PHY_STANDARD_80211ad_OFDM
 
 		    
  /src/wifi/model/yans-wifi-phy.h
-            linha 467:
+            line 467:
                           /**
                            * Configure YansWifiPhy with appropriate channel frequency and
                            * supported rates for 802.11ad_OFDM standard.
@@ -23,38 +23,51 @@ find . -exec grep -q "802.11ad" '{}' \; -print
                                 
 
 /src/wifi/model/yans-wifi-phy.cc
-            linha 265:
+            line 265:
                     case WIFI_PHY_STANDARD_80211ad_OFDM:
                       Configure80211ad_OFDM ();
                       break;
                       
-            linha 878:
+            line 878:
 		    void
 		    YansWifiPhy::Configure80211ad_OFDM (void) //802.11ad
 		    {
-		      NS_LOG_FUNCTION (this);
-		      m_channelStartingFrequency = 60e3;   //60.000 GHz
-		      SetChannelWidth (2160);
-
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate700Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate900Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate1400Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate1700Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate2Gbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate2700Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate3400Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate4200Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate4500Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate5200Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate6200Mbps ());
-		      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate7Gbps ());
+			  NS_LOG_FUNCTION (this);
+			  m_channelStartingFrequency = 60e3;   //60 GHz
+			  SetChannelWidth (2160); // 2.16 GHz
+			
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate700Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate900Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate1400Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate1700Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate2Gbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate2700Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate3400Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate4200Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate4500Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate5200Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate6200Mbps ());
+			  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate7Gbps ());
+			
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs13a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs14a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs15a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs16a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs17a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs18a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs19a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs20a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs21a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs22a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs23a ());
+			  m_deviceMcsSet.push_back (WifiPhy::GetVhtMcs24a ());
 		    }
 
-	    linha 1381: adicionado 
+	    line 1381: adicionado 
 			channelwidth == 2160
 
 /src/wifi/model/wifi-phy.h
-            linha 805: 
+            line 805: 
 			/*
 			* Return a WifiMode for 802.11ad OFDM at 6200Mbps.
 			*
@@ -128,15 +141,28 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 			*/
 			static WifiMode  GetOfdmRate7Gbps ();
 		    
+			static WifiMode GetVhtMcs13a ();
+			static WifiMode GetVhtMcs14a ();
+			static WifiMode GetVhtMcs15a ();
+			static WifiMode GetVhtMcs16a ();
+			static WifiMode GetVhtMcs17a ();
+			static WifiMode GetVhtMcs18a ();
+			static WifiMode GetVhtMcs19a ();
+			static WifiMode GetVhtMcs20a ();
+			static WifiMode GetVhtMcs21a ();
+			static WifiMode GetVhtMcs22a ();
+			static WifiMode GetVhtMcs23a ();
+			static WifiMode GetVhtMcs24a ();
+  
 /src/wifi/model/wifi-phy.cc
-	    linha 275:
+	    line 275:
 		          case WIFI_MOD_CLASS_80211ad_OFDM:
 			  return WifiPhy::GetOfdmRate1700Mbps();
 			  
-	    linha 293, 358, 416:
+	    line 293, 358, 416:
 			case WIFI_MOD_CLASS_80211ad_OFDM:
 			
-            linha 1220: 		    
+            line 1220: 		    
 			WifiMode
 			WifiPhy::GetOfdmRate700Mbps ()
 			{
@@ -280,8 +306,104 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 							    64);
 			  return mode;
 			}
+
+			WifiMode
+			WifiPhy::GetVhtMcs13a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs13a", 13, WIFI_MOD_CLASS_VHT); //802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs14a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs14a", 14, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs15a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs15a", 15, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs16a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs16a", 16, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs17a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs17a", 17, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs18a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs18a", 18, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs19a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs19a", 19, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs20a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs20a", 20, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs21a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs21a", 21, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs22a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs22a", 22, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs23a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs23a", 23, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
+			
+			WifiMode
+			WifiPhy::GetVhtMcs24a ()
+			{
+			  static WifiMode mcs =
+			    WifiModeFactory::CreateWifiMcs ("VhtMcs24a", 24, WIFI_MOD_CLASS_VHT);//802.11ad 60Ghz
+			  return mcs;
+			}
 		    
-	    linha 1676:     
+	    line 1911:     
 		    ns3::WifiPhy::GetOfdmRate700Mbps (); //802.11ad
 		    ns3::WifiPhy::GetOfdmRate900Mbps (); //802.11ad
 		    ns3::WifiPhy::GetOfdmRate1400Mbps (); //802.11ad
@@ -294,12 +416,24 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 		    ns3::WifiPhy::GetOfdmRate5200Mbps (); //802.11ad
 		    ns3::WifiPhy::GetOfdmRate6200Mbps (); //802.11ad
 		    ns3::WifiPhy::GetOfdmRate7Gbps (); //802.11ad
+		    ns3::WifiPhy::GetVhtMcs13a ();
+		    ns3::WifiPhy::GetVhtMcs14a ();
+		    ns3::WifiPhy::GetVhtMcs15a ();
+		    ns3::WifiPhy::GetVhtMcs16a ();
+		    ns3::WifiPhy::GetVhtMcs17a ();
+		    ns3::WifiPhy::GetVhtMcs18a ();
+		    ns3::WifiPhy::GetVhtMcs19a ();
+		    ns3::WifiPhy::GetVhtMcs20a ();
+		    ns3::WifiPhy::GetVhtMcs21a ();
+		    ns3::WifiPhy::GetVhtMcs22a ();
+		    ns3::WifiPhy::GetVhtMcs23a ();
+		    ns3::WifiPhy::GetVhtMcs24a ();
 		    
 /src/wifi/model/wifi-mode.h
-		  linha 61:
+		  line 61:
 		      WIFI_MOD_CLASS_80211ad_OFDM,
 		      
-                 linha 87:
+                 line 87:
                       /** Rate 5/8 */
                       WIFI_CODE_RATE_5_8,
                       /** Rate 13/16 */
@@ -308,7 +442,7 @@ find . -exec grep -q "802.11ad" '{}' \; -print
                       WIFI_CODE_RATE_1_4                      
                       
 /src/wifi/model/wifi-mode.cc
-            linha 94: 
+            line 94: 
                     case WIFI_CODE_RATE_5_8:
                       phyRate = dataRate * 8 / 5;
                       break;
@@ -319,11 +453,11 @@ find . -exec grep -q "802.11ad" '{}' \; -print
                       phyRate = dataRate * 4 / 1;
                       break;    
             
-            linha 132:
+            line 132:
 		    adicionado o or (||)
 		    || item->modClass == WIFI_MOD_CLASS_80211ad_OFDM)
  
-	    linha 163:
+	    line 163:
 		    case WIFI_CODE_RATE_5_8:
 		      codingRate = (5.0 / 8.0);
 		      break;         
@@ -334,7 +468,7 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 		      codingRate = (13.0 / 16.0);
 		      break; 
  
-	    linha 483: 
+	    line 483: 
 		    case WIFI_CODE_RATE_1_4:
 		      return (codeRate == WIFI_CODE_RATE_1_4);  //802.11ad
 		    case WIFI_CODE_RATE_5_8:
@@ -342,18 +476,18 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 		    case WIFI_CODE_RATE_13_16:
 		      return (codeRate == WIFI_CODE_RATE_13_16);  //802.11ad
  
-	    linha 521:
+	    line 521:
 		  case WIFI_MOD_CLASS_80211ad_OFDM:
 		  
  /src/wifi/model/wifiremote-station-manager.cc
-	    linha 1123:
+	    line 1123:
 		case WIFI_MOD_CLASS_80211ad_OFDM:
 		  return (modClassAnswer == WIFI_MOD_CLASS_80211ad_OFDM);
       
  ========================================= MAC LAYER==============================                                  
                                 
 /src/wifi/model/wifi-mac.h
-            linha 448:
+            line 448:
 
                           /**
                           * This method sets 802.11ad_OFDM standards-compliant defaults for following attributes:
@@ -362,12 +496,12 @@ find . -exec grep -q "802.11ad" '{}' \; -print
                           void Configure80211ad_OFDM (void);                                
                                 
 /src/wifi/model/wifi-mac.cc
-            linha 320:
+            line 320:
                         case WIFI_PHY_STANDARD_80211ad_OFDM:
                           Configure80211ad_OFDM ();
                           break;                                
                                 
-            linha 341:                    
+            line 341:                    
 			void
 			WifiMac::Configure80211ad_OFDM (void)
 			{
@@ -386,11 +520,11 @@ find . -exec grep -q "802.11ad" '{}' \; -print
 			}  
 			
 /src/wifi/model/regular-wifi-mac.cc
-            linha 1102:
+            line 1102:
                         case WIFI_PHY_STANDARD_80211ad_OFDM:
 
 /src/wifi/model/ap-wifi-mac.cc
-	    linha 733 e 753: adicionado o or (||)
+	    line 733 e 753: adicionado o or (||)
                         || mode.GetModulationClass () == WIFI_MOD_CLASS_80211ad_OFDM
                         
 ==========================================================
@@ -403,54 +537,7 @@ checar valores:
 
 			  
 /src/wifi/model/yans-wifi-phy.cc
-		  linha 1381: channelwidth == 2160
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		  line 1381: channelwidth == 2160
 
 
 

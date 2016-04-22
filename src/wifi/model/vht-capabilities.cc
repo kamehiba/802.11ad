@@ -269,9 +269,12 @@ VhtCapabilities::SetRxMcsMap (uint16_t map)
 void
 VhtCapabilities::SetRxMcsMap (uint8_t mcs, uint8_t nss)
 {
-  //MCS index should be at least 7 and should not exceed 9
-  NS_ASSERT (mcs >= 7 && mcs <= 9);
-  m_rxMcsMap[nss - 1] = mcs - 7; //1 = MCS 8; 2 = MCS 9
+	if(mcs >= 7 && mcs <= 9)
+		m_rxMcsMap[nss - 1] = mcs - 7; //1 = MCS 8; 2 = MCS 9
+	else if (mcs >= 22 && mcs <= 24)
+		m_rxMcsMap[nss - 1] = mcs - 22;
+	else
+		NS_ASSERT (mcs >= 7 && mcs <= 9);
 }
 
 void
@@ -289,15 +292,18 @@ VhtCapabilities::SetTxMcsMap (uint16_t map)
 void
 VhtCapabilities::SetTxMcsMap (uint8_t mcs, uint8_t nss)
 {
-  //MCS index should be at least 7 and should not exceed 9
-  NS_ASSERT (mcs >= 7 && mcs <= 9);
-  m_txMcsMap[nss - 1] = mcs - 7; //1 = MCS 8; 2 = MCS 9
+	if(mcs >= 7 && mcs <= 9)
+		m_txMcsMap[nss - 1] = mcs - 7; //1 = MCS 8; 2 = MCS 9
+	else if (mcs >= 22 && mcs <= 24)
+		m_txMcsMap[nss - 1] = mcs - 22;
+	else
+		NS_ASSERT (mcs >= 7 && mcs <= 9);
 }
 
 bool
 VhtCapabilities::IsSupportedTxMcs (uint8_t mcs) const
 {
-  NS_ASSERT (mcs >= 0 && mcs <= 9);
+  //NS_ASSERT (mcs >= 0 && mcs <= 9);
   if (mcs <= 7)
     {
       return true;
@@ -310,13 +316,27 @@ VhtCapabilities::IsSupportedTxMcs (uint8_t mcs) const
     {
       return true;
     }
+
+  if (mcs == 22)
+    {
+      return true;
+    }
+  if (mcs == 23 && m_txMcsMap[0] == 1)
+    {
+      return true;
+    }
+  if (mcs == 24 && m_txMcsMap[0] == 2)
+    {
+      return true;
+    }
+
   return false;
 }
 
 bool
 VhtCapabilities::IsSupportedRxMcs (uint8_t mcs) const
 {
-  NS_ASSERT (mcs >= 0 && mcs <= 9);
+  //NS_ASSERT (mcs >= 0 && mcs <= 9);
   if (mcs <= 7)
     {
       return true;
@@ -329,6 +349,20 @@ VhtCapabilities::IsSupportedRxMcs (uint8_t mcs) const
     {
       return true;
     }
+
+  if (mcs == 22)
+    {
+      return true;
+    }
+  if (mcs == 23 && m_txMcsMap[0] == 1)
+    {
+      return true;
+    }
+  if (mcs == 24 && m_txMcsMap[0] == 2)
+    {
+      return true;
+    }
+
   return false;
 }
 

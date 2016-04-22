@@ -24,9 +24,10 @@
    - ue
 
 */
+
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
-#include "ns3/csma-module.h"
+//#include "ns3/csma-module.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/mobility-module.h"
@@ -100,7 +101,7 @@ int main (int argc, char *argv[])
 	//Node Vars
 	double ueSpeed						= 1.0; 	// m/s.
 	uint16_t nAcpoints 					= 1; 	// Access Points
-	uint16_t nStations 					= 2;	// Stations
+	uint16_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
 
@@ -233,7 +234,7 @@ int main (int argc, char *argv[])
 
 	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
 	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-	QosWifiMacHelper		wifiMac 	= QosWifiMacHelper::Default ();
+	QosWifiMacHelper		wifiMac = QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
 	for (uint32_t i = 0; i < nAcpoints; ++i)
