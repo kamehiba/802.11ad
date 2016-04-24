@@ -384,6 +384,7 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("//////////////////////////");
 /////////////////////////////////////////////////////
 
+	time_t tempoInicio 	= time(NULL);
 	Simulator::Stop (Seconds (simulationTime));
 
 	if (tracing)
@@ -424,7 +425,6 @@ int main (int argc, char *argv[])
 
 	Simulator::Destroy ();
 
-	time_t tempoInicio 	= time(NULL);
 	time_t tempoFinal 	= time(NULL);
 	double tempoTotal 	= difftime(tempoFinal, tempoInicio);
 	std::cout << "Real time: " << tempoTotal << " secs  ~ " << (uint32_t)tempoTotal / 60 << " min\n";
