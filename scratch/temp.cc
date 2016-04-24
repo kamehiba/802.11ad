@@ -43,17 +43,19 @@
 #include "ns3/cone-antenna.h"
 #include "ns3/measured-2d-antenna.h"
 #include <ns3/femtocellBlockAllocator.h>
-
+#include "ns3/gnuplot.h"
+#include <arpa/inet.h>
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
 
+#define color(param) printf("\033[%sm",param)
 void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper&, std::string, double,uint32_t);
+void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*);
 
 int main (int argc, char *argv[])
 {
-	double simulationTime				= 2;
+	double simulationTime				= 1;
 
 	bool verbose						= true; // packetSink dataFlow
 	bool tracing						= false;
@@ -80,7 +82,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "512Kbps";
+	std::string dataRate 				= "512kb/s";
 	uint32_t packetSize					= 1024;
 	uint32_t appPort					= 9;
 
@@ -99,8 +101,8 @@ int main (int argc, char *argv[])
 
 	//Node Vars
 	double ueSpeed						= 1.0; 	// m/s.
-	uint16_t nAcpoints 					= 1; 	// Access Points
-	uint16_t nStations 					= 1;	// Stations
+	uint32_t nAcpoints 					= 1; 	// Access Points
+	uint32_t nStations 					= 2;	// Stations
 
 	std::string outFileName				= "debug";
 
@@ -210,18 +212,18 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
-	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-
-	QosWifiMacHelper wifiMac = QosWifiMacHelper::Default ();
-	//VhtWifiMacHelper		wifiMac 	= VhtWifiMacHelper::Default ();
-	WifiHelper 				wifi;
-
 	for (uint32_t i = 0; i < nAcpoints; ++i)
 	{
 		//////////////////////////////////////////////////
 		NS_LOG_UNCOND ("Innitializing WIFI on ENB-" << i);
 		///////////////////////////////////////////////////
+
+		YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
+		YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
+
+		QosWifiMacHelper 		wifiMac 	= QosWifiMacHelper::Default ();
+		//VhtWifiMacHelper		wifiMac 	= VhtWifiMacHelper::Default ();
+		WifiHelper 				wifi;
 
 		Ssid ssid = Ssid ("ns3-wifi");
 
@@ -373,15 +375,31 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t u = 1; u <= nStations; ++u)
+	ApplicationContainer serverApps, clientApps;
+	for (uint32_t u = 0; u < nStations; ++u)
 	{
-		InetSocketAddress dst = InetSocketAddress (wifiInterface.GetAddress (u), appPort);
-		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
-		ApplicationContainer apps 	= onoffHelper.Install (remoteHost);
-		PacketSinkHelper sink 		= PacketSinkHelper (protocol, dst);
-		apps = sink.Install (wifiStatNode.Get(u-1));
-		apps.Start (Seconds (serverStartTime));
+			NS_LOG_UNCOND ("==> Installing UDP DL app for UE MMWAVE "  << u);
+			PacketSinkHelper dlPacketSinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), appPort));
+			serverApps.Add (dlPacketSinkHelper.Install (wifiStatNode.Get(u)));
+
+			UdpClientHelper dlClient (wifiInterface.GetAddress (u+1), appPort);
+			dlClient.SetAttribute ("Interval", TimeValue (MilliSeconds(1.0)));
+			dlClient.SetAttribute ("MaxPackets", UintegerValue(100000000));
+			clientApps.Add (dlClient.Install (remoteHost));
+
+			UdpServerHelper udpServer = UdpServerHelper (appPort);
+			clientApps = udpServer.Install (wifiStatNode.Get(u));
 	}
+
+//	for (uint32_t u = 1; u <= nStations; ++u)
+//	{
+//		InetSocketAddress dst = InetSocketAddress (wifiInterface.GetAddress (u), appPort);
+//		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
+//		ApplicationContainer apps 	= onoffHelper.Install (remoteHost);
+//		PacketSinkHelper sink 		= PacketSinkHelper (protocol, dst);
+//		apps = sink.Install (wifiStatNode.Get(u-1));
+//		apps.Start (Seconds (serverStartTime));
+//	}
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -413,8 +431,11 @@ int main (int argc, char *argv[])
 
 		Simulator::Run ();
 
+		monitor->CheckForLostPackets ();
+		monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
+
 		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
-		flowmonitorOutput(monitor, flowmon, outFileName, simulationTime, packetSize);
+		flowmonitorOutput(monitor, &flowmon);
 	}
 	else
 	{
@@ -423,14 +444,14 @@ int main (int argc, char *argv[])
 	}
 
 	std::cout << "========================= " << "\n";
-	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " seconds\n";
+	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
 
 	Simulator::Destroy ();
 
 	time_t tempoInicio 	= time(NULL);
 	time_t tempoFinal 	= time(NULL);
 	double tempoTotal 	= difftime(tempoFinal, tempoInicio);
-	std::cout << "Real time: " << tempoTotal << " seconds   ~ " << (uint32_t)tempoTotal / 60 << " min\n";
+	std::cout << "Real time: " << tempoTotal << " secs  ~ " << (uint32_t)tempoTotal / 60 << " min\n";
 	std::cout << "========================= " << "\n\n";
 
 	return 0;
@@ -449,14 +470,11 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double ueSpeed, bool useFemtocells
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
 }
 
-void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper &flowmon, std::string outFileName, double simulationTime, uint32_t packetSize)
+void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 {
-	double difftx=0.0, diffrx=0.0, txbitrate_value=0.0, rxbitrate_value=0.0, delay_value=0.0;
-	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
+	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, rxbitrate_value=0.0, delay_value=0.0;
+	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
-
-	monitor->CheckForLostPackets ();
-	monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
 
 	for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 	{
@@ -464,36 +482,69 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper &flowmon, std
 
 		difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
 		diffrx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstRxPacket.GetSeconds();
-		txbitrate_value = (double) i->second.txBytes * 8 / 1024 / difftx;
+		diffrxtx = i->second.timeLastRxPacket.GetSeconds()-i->second.timeFirstTxPacket.GetSeconds();
+
+		txbitrate_value = (double) i->second.txBytes * 8 / difftx / 1024 / 1024;
+		rxbitrate_value = (double) i->second.rxBytes * 8 / diffrx / 1024 / 1024;
+		//rxbitrate_value = (double)i->second.rxPackets * packetSize *8 /1024 / diffrx;
 
 		if (i->second.rxPackets != 0)
-		{
-			rxbitrate_value = (double)i->second.rxPackets * packetSize *8 /1024 / diffrx;
-			delay_value = (double) i->second.delaySum.GetSeconds() /(double) i->second.rxPackets;
-		}
+			delay_value = (double) i->second.delaySum.GetSeconds() / (double) i->second.rxPackets;
 		else
-		{
-			rxbitrate_value = 0;
 			delay_value = 0;
-		}
 
 		std::cout << "========================= " << "\n";
+		color("31");
 		std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
+		color("0");
 		std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
 		std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
-		std::cout << "  Tx bitrate: " << txbitrate_value << " kbps\n";
-		std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / simulationTime / 1024 / 1024  << " Mbps\n\n";
+		std::cout << "  Tx bitrate: " << txbitrate_value << " Mbps\n";
+		std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / difftx / 1024 / 1024  << " Mbps\n\n";
 
 		std::cout << "  Rx Packets: " << i->second.rxPackets << "\n";
 		std::cout << "  Rx Bytes:   " << i->second.rxBytes << "\n";
-		std::cout << "  Rx bitrate: " << rxbitrate_value << " kbps\n\n";
+		std::cout << "  Rx bitrate: " << rxbitrate_value << " Mbps\n\n";
 
-		std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / simulationTime / 1024 / 1024  << " Mbps\n\n";
+		std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / diffrxtx / 1024 / 1024  << " Mbps\n\n";
 
 		std::cout << "  Lost Packets: " << i->second.lostPackets << "\n";
 		std::cout << "  Dropped Packets: " << i->second.packetsDropped.size() << "\n";
-		std::cout << "  JitterSum: " << i->second.jitterSum << "\n\n";
-
+		std::cout << "  JitterSum: " << i->second.jitterSum << "\n";
 		std::cout << "  Average delay: " << delay_value << "s\n";
+
+////////////////////////////////////
+
+		double x=0.0, y=0.0;
+		std::string fileNameWithNoExtension = "gnuplot";
+		std::string graphicsFileName        = fileNameWithNoExtension + ".png";
+		std::string plotFileName            = fileNameWithNoExtension + ".plt";
+		std::string plotTitle               = "Flow vs Throughput";
+		std::string dataTitle               = "Throughput";
+
+		Gnuplot gnuplot (graphicsFileName);
+		Gnuplot2dDataset dataset;
+
+		dataset.SetTitle (dataTitle);
+		dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
+
+		gnuplot.SetTitle (plotTitle);
+		gnuplot.SetTerminal ("png");
+		gnuplot.SetLegend ("Flow", "Throughput");
+		//plot.AppendExtra ("set xrange [0:+10]");
+
+		//x = diffrx;
+		x = Simulator::Now().GetSeconds();
+
+		//y=(i->second.rxBytes * 8.0 / (i->second.timeLastRxPacket.GetSeconds()-i->second.timeFirstTxPacket.GetSeconds()) / 1024 / 1024);
+		y=rxbitrate_value;
+
+		dataset.Add((double)x,(double) y);
+
+		gnuplot.AddDataset (dataset);
+		std::ofstream plotFile (plotFileName.c_str());
+		gnuplot.GenerateOutput (plotFile);
+		plotFile.close ();
 	}
 }
+

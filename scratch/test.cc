@@ -49,7 +49,7 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("debug");
 
 void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper&, std::string, double,uint32_t);
+void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*, std::string, double,uint32_t);
 
 int main (int argc, char *argv[])
 {
@@ -100,8 +100,8 @@ int main (int argc, char *argv[])
 
 	//Node Vars
 	double ueSpeed						= 1.0; 	// m/s.
-	uint16_t nAcpoints 					= 1; 	// Access Points
-	uint16_t nStations 					= 1;	// Stations
+	uint32_t nAcpoints 					= 1; 	// Access Points
+	uint32_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
 
@@ -441,7 +441,7 @@ int main (int argc, char *argv[])
 		Simulator::Run ();
 
 		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
-		flowmonitorOutput(monitor, flowmon, outFileName, simulationTime, packetSize);
+		flowmonitorOutput(monitor, &flowmon, outFileName, simulationTime, packetSize);
 	}
 	else
 	{
@@ -476,10 +476,10 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double ueSpeed, bool useFemtocells
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
 }
 
-void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper &flowmon, std::string outFileName, double simulationTime, uint32_t packetSize)
+void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon, std::string outFileName, double simulationTime, uint32_t packetSize)
 {
 	double difftx=0.0, diffrx=0.0, txbitrate_value=0.0, rxbitrate_value=0.0, delay_value=0.0;
-	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
+	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
 
 	monitor->CheckForLostPackets ();
