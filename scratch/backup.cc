@@ -57,12 +57,12 @@ int main (int argc, char *argv[])
 {
 	double simulationTime				= 1;
 
-	bool verbose						= true; // packetSink dataFlow
-	bool tracing						= false;
-	bool netAnim						= false;
-	bool flowmonitor					= true;
+	double serverStartTime				= 0.01;
 
-	double serverStartTime				= 0.05;
+	bool verbose						= true; // packetSink dataFlow
+	bool flowmonitor					= true;
+	bool netAnim						= false;
+	bool tracing						= false;
 
 	//P2P Vars
 	uint32_t mtu						= 1500; // p2p Mtu
@@ -89,7 +89,7 @@ int main (int argc, char *argv[])
 	//IPs
 	Ipv4Address ipRemoteHost			= "1.0.0.0";
 	Ipv4Address ipRouter				= "2.0.0.0";
-	Ipv4Address ipWifis					= "3.0.0.0";
+	Ipv4Address ipWifi					= "3.0.0.0";
 	Ipv4Mask	netMask					= "255.0.0.0";
 
 	//WIFI Vars
@@ -99,8 +99,8 @@ int main (int argc, char *argv[])
 	uint32_t nRxAntennas				= 1;
 	uint32_t maxAmsduSize				= 999999;//262143;
 
-	//Node Vars
-	double ueSpeed						= 1.0; 	// m/s.
+	//Nodes Vars
+	double staSpeed						= 1.0; 	// m/s.
 	uint32_t nAcpoints 					= 1; 	// Access Points
 	uint32_t nStations 					= 1;	// Stations
 
@@ -286,7 +286,7 @@ int main (int argc, char *argv[])
 	ipv4.SetBase (ipRouter, netMask);
 	routerInterface	= ipv4.Assign (routerDevice);
 
-	ipv4.SetBase (ipWifis, netMask);
+	ipv4.SetBase (ipWifi, netMask);
 	wifiAPInterface = ipv4.Assign (wifiAPDevice);
 	wifiStaInterface = ipv4.Assign (wifiStaDevice);
 
@@ -346,8 +346,8 @@ int main (int argc, char *argv[])
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinY", 		DoubleValue (boxArea.yMin));
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxY", 		DoubleValue (boxArea.yMax));
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::Z", 			DoubleValue (0.0));
-	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxSpeed", 	DoubleValue (ueSpeed));
-	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (ueSpeed));
+	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxSpeed", 	DoubleValue (staSpeed));
+	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (staSpeed));
 	Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
 	ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
 	uemobility.SetPositionAllocator (ueRandomPositionAlloc);
@@ -376,17 +376,6 @@ int main (int argc, char *argv[])
         sinks.Add(packetSinkHelper.Install(wifiStatNode.Get(i)));
         sinks.Start(Seconds(serverStartTime));
     }
-
-//	for (uint32_t u = 0; u < nStations; ++u)
-//	{
-//		InetSocketAddress dst = InetSocketAddress (wifiStaInterface.GetAddress (u), appPort);
-//		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
-//		ApplicationContainer apps 	= onoffHelper.Install (remoteHost);
-//
-//    	PacketSinkHelper sink 		= PacketSinkHelper (protocol, dst);
-//		apps = sink.Install (wifiStatNode.Get(u));
-//		apps.Start (Seconds (serverStartTime));
-//	}
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -421,13 +410,13 @@ int main (int argc, char *argv[])
 		monitor->CheckForLostPackets ();
 		monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
 
-		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 		flowmonitorOutput(monitor, &flowmon);
 	}
 	else
 	{
 		Simulator::Run ();
-		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 	}
 
 	std::cout << "========================= " << "\n";
@@ -444,14 +433,14 @@ int main (int argc, char *argv[])
 	return 0;
 }
 
-void showConfigs(uint32_t nEnb, uint32_t nUe, double ueSpeed, bool useFemtocells, uint32_t nFemtocells,
+void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
 				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
 {
 	std::cout << std::endl;
 	std::cout << "==========CONFIGS======== " << "\n";
 	std::cout << "eNB: " << nEnb << "\n";
 	std::cout << "UE: " << nUe << "\n";
-	std::cout << "UE Speed: " << ueSpeed << "m/s" << " <> " << ueSpeed*3.6 << "km/h\n";
+	std::cout << "UE Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
@@ -473,7 +462,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 
 		txbitrate_value = (double) i->second.txBytes * 8 / difftx / 1024 / 1024;
 		rxbitrate_value = (double) i->second.rxBytes * 8 / diffrx / 1024 / 1024;
-		//rxbitrate_value = (double)i->second.rxPackets * packetSize *8 /1024 / diffrx;
 
 		if (i->second.rxPackets != 0)
 			delay_value = (double) i->second.delaySum.GetSeconds() / (double) i->second.rxPackets;
