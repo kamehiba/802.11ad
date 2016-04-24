@@ -17,16 +17,17 @@
 
  Default Network Topology
 
-   Enb
+   APs
    *
    -
    -
-   - ue
+   - Sta
 
 */
+
 //#include "ns3/lte-module.h"
 //#include "ns3/lte-helper.h"
-#include "ns3/csma-module.h"
+//#include "ns3/csma-module.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/mobility-module.h"
@@ -42,17 +43,19 @@
 #include "ns3/cone-antenna.h"
 #include "ns3/measured-2d-antenna.h"
 #include <ns3/femtocellBlockAllocator.h>
-
+#include "ns3/gnuplot.h"
+#include <arpa/inet.h>
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
 
+#define color(param) printf("\033[%sm",param)
 void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper&, std::string, double,uint32_t);
+void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*);
 
 int main (int argc, char *argv[])
 {
-	double simulationTime				= 2;
+	double simulationTime				= 1;
 
 	bool verbose						= true; // packetSink dataFlow
 	bool tracing						= false;
@@ -79,15 +82,14 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "512Kbps";
+	std::string dataRate 				= "512kb/s";
 	uint32_t packetSize					= 1024;
 	uint32_t appPort					= 9;
 
 	//IPs
 	Ipv4Address ipRemoteHost			= "1.0.0.0";
 	Ipv4Address ipRouter				= "2.0.0.0";
-	Ipv4Address ipWifiAp				= "3.0.0.0";
-	Ipv4Address ipWifiStat				= "4.0.0.0";
+	Ipv4Address ipWifis					= "3.0.0.0";
 	Ipv4Mask	netMask					= "255.0.0.0";
 
 	//WIFI Vars
@@ -99,16 +101,16 @@ int main (int argc, char *argv[])
 
 	//Node Vars
 	double ueSpeed						= 1.0; 	// m/s.
-	uint16_t nAcpoints 					= 1; 	// Access Points
-	uint16_t nStations 					= 1;	// Stations
+	uint32_t nAcpoints 					= 1; 	// Access Points
+	uint32_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
 
-	Ipv4AddressHelper 			ipv4Rh, ipv4Router, ipv4WifiStat, ipv4WifiAp;
-	NetDeviceContainer 			remoteHostDevice, routerDevice, wifiApDevice, wifiStatDevice;
-	Ipv4InterfaceContainer 		remoteHostInterface, routerInterface, wifiApInterface, wifiStatInterface;
+	Ipv4AddressHelper 			ipv4;
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
+	NetDeviceContainer 			remoteHostDevice, routerDevice, wifiAPDevice, wifiStaDevice;
+	Ipv4InterfaceContainer 		remoteHostInterface, routerInterface, wifiAPInterface, wifiStaInterface;
 	Box 						boxArea;
 
 ///////////////////////////////////////////////
@@ -191,22 +193,6 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices Enb/Ue");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	internet.Install(remoteHostContainer);
-	internet.Install(routerContainer);
-	internet.Install(wifiApNode);
-	internet.Install(wifiStatNode);
-
-	ipv4Rh.SetBase (ipRemoteHost, netMask);
-	ipv4Router.SetBase (ipRouter, netMask);
-	ipv4WifiAp.SetBase (ipWifiAp, netMask);
-	ipv4WifiStat.SetBase (ipWifiStat, netMask);
-
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("Installing p2p");
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
@@ -215,15 +201,10 @@ int main (int argc, char *argv[])
 	p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
 	p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (p2pLinkDelay)));
 	p2ph.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
-
 	remoteHostDevice = p2ph.Install (remoteHost, router);
-	remoteHostInterface	= ipv4Rh.Assign (remoteHostDevice);
 
 	for (uint32_t i = 0; i < wifiApNode.GetN (); ++i)
-	{
 		routerDevice = p2ph.Install (wifiApNode.Get(i), router);
-		routerInterface	= ipv4Router.Assign (routerDevice);
-	}
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -233,68 +214,83 @@ int main (int argc, char *argv[])
 
 	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
 	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-	QosWifiMacHelper		wifiMac 	= QosWifiMacHelper::Default ();
+
+	QosWifiMacHelper 		wifiMac 	= QosWifiMacHelper::Default ();
+	//VhtWifiMacHelper		wifiMac 	= VhtWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
-	for (uint32_t i = 0; i < nAcpoints; ++i)
-	{
-		//////////////////////////////////////////////////
-		NS_LOG_UNCOND ("Innitializing WIFI on ENB-" << i);
-		///////////////////////////////////////////////////
+	Ssid ssid = Ssid ("ns3-wifi");
 
-		Ssid ssid = Ssid ("ns3-wifi");
+	wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
+	wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
+	//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
 
-		wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
-		wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
-		//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
+	wifiMac.SetType ("ns3::FlywaysWifiMac");
 
-		wifiMac.SetType ("ns3::FlywaysWifiMac");
+	////video trasmission
+	wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
+	wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
-		////video trasmission
-		wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
-		wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
+	//wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
+	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
 
-		//wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-		//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
-		//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
-
-		wifiPhy.SetChannel (wifiChannel.Create ());
-		wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
-		wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
-		wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
-		wifiPhy.Set ("TxAntennas", UintegerValue (nTxAntennas));
-		wifiPhy.Set ("RxAntennas", UintegerValue (nRxAntennas));
+	wifiPhy.SetChannel (wifiChannel.Create ());
+	wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
+	wifiPhy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
+	wifiPhy.Set ("ChannelNumber", UintegerValue(wifiChannelNumber));
+	wifiPhy.Set ("TxAntennas", UintegerValue (nTxAntennas));
+	wifiPhy.Set ("RxAntennas", UintegerValue (nRxAntennas));
 //		wifiPhy.Set ("TxGain", DoubleValue (0));
 //		wifiPhy.Set ("RxGain", DoubleValue (0));
-		wifiPhy.Set ("TxPowerStart", DoubleValue(10.0));
-		wifiPhy.Set ("TxPowerEnd", DoubleValue(10.0));
-		wifiPhy.Set ("TxPowerLevels", UintegerValue(1));
-		wifiPhy.Set ("RxNoiseFigure", DoubleValue(0));
-		wifiPhy.Set ("CcaMode1Threshold", DoubleValue (-79) );
-		wifiPhy.Set ("EnergyDetectionThreshold", DoubleValue (-79+3) );
-		wifiPhy.Set ("ShortGuardEnabled", BooleanValue (false));// Set guard interval
+	wifiPhy.Set ("TxPowerStart", DoubleValue(10.0));
+	wifiPhy.Set ("TxPowerEnd", DoubleValue(10.0));
+	wifiPhy.Set ("TxPowerLevels", UintegerValue(1));
+	wifiPhy.Set ("RxNoiseFigure", DoubleValue(0));
+	wifiPhy.Set ("CcaMode1Threshold", DoubleValue (-79) );
+	wifiPhy.Set ("EnergyDetectionThreshold", DoubleValue (-79+3) );
+	wifiPhy.Set ("ShortGuardEnabled", BooleanValue (false));// Set guard interval
 
-		wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-		//wifiApDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiApNode));
-		wifiApDevice = wifi.Install (wifiPhy, wifiMac, wifiApNode);
-		wifiApInterface = ipv4WifiAp.Assign (wifiApDevice);
+	wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
+	wifiAPDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiApNode));
 
-		wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
-		//wifiStatDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiStatNode));
-		wifiStatDevice = wifi.Install (wifiPhy, wifiMac, wifiStatNode);
-		wifiStatInterface = ipv4WifiStat.Assign (wifiStatDevice);
+	wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
+	wifiStaDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiStatNode));
 
-		if(use2DAntenna)
-		{
-			Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
-			m2DAntenna->SetMode(10);
+	if(use2DAntenna)
+	{
+		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
+		m2DAntenna->SetMode(10);
 
-			wifiApDevice.Get(i)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
+		for (uint32_t u = 0; u < nAcpoints; ++u)
+			wifiAPDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
 
-			for (uint32_t u = 0; u < nStations; ++u)
-				wifiStatDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
-		}
+		for (uint32_t u = 0; u < nStations; ++u)
+			wifiStaDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
 	}
+
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices");
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+
+	internet.Install(remoteHostContainer);
+	internet.Install(routerContainer);
+	internet.Install(wifiApNode);
+	internet.Install(wifiStatNode);
+
+	ipv4.SetBase (ipRemoteHost, netMask);
+	remoteHostInterface	= ipv4.Assign (remoteHostDevice);
+
+	ipv4.SetBase (ipRouter, netMask);
+	routerInterface	= ipv4.Assign (routerDevice);
+
+	ipv4.SetBase (ipWifis, netMask);
+	wifiAPInterface = ipv4.Assign (wifiAPDevice);
+	wifiStaInterface = ipv4.Assign (wifiStaDevice);
+
+	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -362,52 +358,35 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Assigning Routing Tables");
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-	NS_LOG_UNCOND ("Assigning Routing Tables on Remote Host");
-	Ptr<Ipv4StaticRouting> rhStaticRouting = ipv4RoutingHelper.GetStaticRouting (remoteHost->GetObject<Ipv4> ());
-	rhStaticRouting->AddNetworkRouteTo(ipWifiStat, netMask, 1); //AddNetworkRoute To Stat
-
-	NS_LOG_UNCOND ("Assigning Routing Tables on Router");
-	Ptr<Ipv4StaticRouting> routerStaticRouting = ipv4RoutingHelper.GetStaticRouting (router->GetObject<Ipv4> ());
-	routerStaticRouting->AddNetworkRouteTo(ipWifiStat, netMask, 2); //AddNetworkRoute To Stat
-
-	NS_LOG_UNCOND ("Assigning Routing Tables on Access Points");
-	for (uint32_t u = 0; u < nAcpoints; ++u)
-	{
-		Ptr<Node> ap = wifiApNode.Get (u);
-		Ptr<Ipv4StaticRouting> apStaticRouting = ipv4RoutingHelper.GetStaticRouting (ap->GetObject<Ipv4> ());
-		apStaticRouting->AddNetworkRouteTo(ipWifiStat, netMask, 2); //AddNetworkRoute To Stat
-	}
-
-//	NS_LOG_UNCOND ("Assigning Routing Tables on Stations");
-//	for (uint32_t u = 0; u < nStations; ++u)
-//	{
-//		Ptr<Node> stat = wifiStatNode.Get (u);
-//		Ptr<Ipv4StaticRouting> statStaticRouting = ipv4RoutingHelper.GetStaticRouting (stat->GetObject<Ipv4> ());
-//		statStaticRouting->AddNetworkRouteTo(ipRemoteHost, netMask, 1); //AddNetworkRoute To remotehost
-//	}
-
-//	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Initializing Applications");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	for (uint32_t u = 0; u < nStations; ++u)
-	{
-		InetSocketAddress dst = InetSocketAddress (wifiStatInterface.GetAddress (u), appPort);
-		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
+    OnOffHelper onoff(protocol, Address());
+    ApplicationContainer source, sinks;
+    PacketSinkHelper packetSinkHelper(protocol, Address(InetSocketAddress(Ipv4Address::GetAny(), appPort)));
 
-		ApplicationContainer apps 	= onoffHelper.Install (remoteHost);
-		PacketSinkHelper sink 		= PacketSinkHelper (protocol, dst);
-		apps = sink.Install (wifiStatNode.Get(u));
-		apps.Start (Seconds (serverStartTime));
-	}
+    for (uint32_t i = 0; i < nStations; i++)
+    {
+        AddressValue remoteAddress(InetSocketAddress(wifiStaInterface.GetAddress(i), appPort));
+        onoff.SetAttribute("Remote", remoteAddress);
+        source.Add(onoff.Install(remoteHost));
+  		source.Start(Seconds(serverStartTime));
+
+        sinks.Add(packetSinkHelper.Install(wifiStatNode.Get(i)));
+        sinks.Start(Seconds(serverStartTime));
+    }
+
+//	for (uint32_t u = 0; u < nStations; ++u)
+//	{
+//		InetSocketAddress dst = InetSocketAddress (wifiStaInterface.GetAddress (u), appPort);
+//		OnOffHelper onoffHelper = OnOffHelper (protocol, dst);
+//		ApplicationContainer apps 	= onoffHelper.Install (remoteHost);
+//
+//    	PacketSinkHelper sink 		= PacketSinkHelper (protocol, dst);
+//		apps = sink.Install (wifiStatNode.Get(u));
+//		apps.Start (Seconds (serverStartTime));
+//	}
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -439,8 +418,11 @@ int main (int argc, char *argv[])
 
 		Simulator::Run ();
 
+		monitor->CheckForLostPackets ();
+		monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
+
 		showConfigs(nAcpoints, nStations, ueSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
-		flowmonitorOutput(monitor, flowmon, outFileName, simulationTime, packetSize);
+		flowmonitorOutput(monitor, &flowmon);
 	}
 	else
 	{
@@ -449,14 +431,14 @@ int main (int argc, char *argv[])
 	}
 
 	std::cout << "========================= " << "\n";
-	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " seconds\n";
+	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
 
 	Simulator::Destroy ();
 
 	time_t tempoInicio 	= time(NULL);
 	time_t tempoFinal 	= time(NULL);
 	double tempoTotal 	= difftime(tempoFinal, tempoInicio);
-	std::cout << "Real time: " << tempoTotal << " seconds   ~ " << (uint32_t)tempoTotal / 60 << " min\n";
+	std::cout << "Real time: " << tempoTotal << " secs  ~ " << (uint32_t)tempoTotal / 60 << " min\n";
 	std::cout << "========================= " << "\n\n";
 
 	return 0;
@@ -475,14 +457,11 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double ueSpeed, bool useFemtocells
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
 }
 
-void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper &flowmon, std::string outFileName, double simulationTime, uint32_t packetSize)
+void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 {
-	double difftx=0.0, diffrx=0.0, txbitrate_value=0.0, rxbitrate_value=0.0, delay_value=0.0;
-	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
+	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, rxbitrate_value=0.0, delay_value=0.0;
+	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
-
-	monitor->CheckForLostPackets ();
-	monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
 
 	for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 	{
@@ -490,36 +469,69 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper &flowmon, std
 
 		difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
 		diffrx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstRxPacket.GetSeconds();
-		txbitrate_value = (double) i->second.txBytes * 8 / 1024 / difftx;
+		diffrxtx = i->second.timeLastRxPacket.GetSeconds()-i->second.timeFirstTxPacket.GetSeconds();
+
+		txbitrate_value = (double) i->second.txBytes * 8 / difftx / 1024 / 1024;
+		rxbitrate_value = (double) i->second.rxBytes * 8 / diffrx / 1024 / 1024;
+		//rxbitrate_value = (double)i->second.rxPackets * packetSize *8 /1024 / diffrx;
 
 		if (i->second.rxPackets != 0)
-		{
-			rxbitrate_value = (double)i->second.rxPackets * packetSize *8 /1024 / diffrx;
-			delay_value = (double) i->second.delaySum.GetSeconds() /(double) i->second.rxPackets;
-		}
+			delay_value = (double) i->second.delaySum.GetSeconds() / (double) i->second.rxPackets;
 		else
-		{
-			rxbitrate_value = 0;
 			delay_value = 0;
-		}
 
 		std::cout << "========================= " << "\n";
+		color("31");
 		std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
+		color("0");
 		std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
 		std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
-		std::cout << "  Tx bitrate: " << txbitrate_value << " kbps\n";
-		std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / simulationTime / 1024 / 1024  << " Mbps\n\n";
+		std::cout << "  Tx bitrate: " << txbitrate_value << " Mbps\n";
+		std::cout << "  TxOffered:  " << i->second.txBytes * 8.0 / difftx / 1024 / 1024  << " Mbps\n\n";
 
 		std::cout << "  Rx Packets: " << i->second.rxPackets << "\n";
 		std::cout << "  Rx Bytes:   " << i->second.rxBytes << "\n";
-		std::cout << "  Rx bitrate: " << rxbitrate_value << " kbps\n\n";
+		std::cout << "  Rx bitrate: " << rxbitrate_value << " Mbps\n\n";
 
-		std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / simulationTime / 1024 / 1024  << " Mbps\n\n";
+		std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / diffrxtx / 1024 / 1024  << " Mbps\n\n";
 
 		std::cout << "  Lost Packets: " << i->second.lostPackets << "\n";
 		std::cout << "  Dropped Packets: " << i->second.packetsDropped.size() << "\n";
-		std::cout << "  JitterSum: " << i->second.jitterSum << "\n\n";
-
+		std::cout << "  JitterSum: " << i->second.jitterSum << "\n";
 		std::cout << "  Average delay: " << delay_value << "s\n";
+
+////////////////////////////////////
+
+		double x=0.0, y=0.0;
+		std::string fileNameWithNoExtension = "gnuplot";
+		std::string graphicsFileName        = fileNameWithNoExtension + ".png";
+		std::string plotFileName            = fileNameWithNoExtension + ".plt";
+		std::string plotTitle               = "Flow vs Throughput";
+		std::string dataTitle               = "Throughput";
+
+		Gnuplot gnuplot (graphicsFileName);
+		Gnuplot2dDataset dataset;
+
+		dataset.SetTitle (dataTitle);
+		dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
+
+		gnuplot.SetTitle (plotTitle);
+		gnuplot.SetTerminal ("png");
+		gnuplot.SetLegend ("Flow", "Throughput");
+		//plot.AppendExtra ("set xrange [0:+10]");
+
+		//x = diffrx;
+		x = Simulator::Now().GetSeconds();
+
+		//y=(i->second.rxBytes * 8.0 / (i->second.timeLastRxPacket.GetSeconds()-i->second.timeFirstTxPacket.GetSeconds()) / 1024 / 1024);
+		y=rxbitrate_value;
+
+		dataset.Add((double)x,(double) y);
+
+		gnuplot.AddDataset (dataset);
+		std::ofstream plotFile (plotFileName.c_str());
+		gnuplot.GenerateOutput (plotFile);
+		plotFile.close ();
 	}
 }
+
