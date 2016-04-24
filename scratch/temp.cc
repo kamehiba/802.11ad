@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "512kb/s";
+	std::string dataRate 				= "512Kb/s";
 	uint32_t packetSize					= 1024;
 	uint32_t appPort					= 9;
 
@@ -222,8 +222,11 @@ int main (int argc, char *argv[])
 	Ssid ssid = Ssid ("ns3-wifi");
 
 	wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
-	wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
+	wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+	//wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode", StringValue("OfdmRate7Gbps"));
+	//wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
 	//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
+
 
 	wifiMac.SetType ("ns3::FlywaysWifiMac");
 
@@ -520,6 +523,8 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 		std::ofstream plotFile (plotFileName.c_str());
 		gnuplot.GenerateOutput (plotFile);
 		plotFile.close ();
+
+		Simulator::Schedule (Seconds (1.0), &flowmonitorOutput, monitor, flowmon);
 	}
 }
 
