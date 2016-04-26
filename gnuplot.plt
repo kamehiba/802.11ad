@@ -1,8 +1,9 @@
 set terminal png
 set output "gnuplot.png"
-set title "Flow vs Throughput"
-set xlabel "Flow"
-set ylabel "Throughput"
-plot "-"  title "Throughput" with linespoints
-1 10.917
-e
+set title "Packet Byte Count vs. Time \n\nTrace Source Path: /NodeList/*/ApplicationList/*/$ns3::PacketSink/Rx"
+set xlabel "Time (Seconds)"
+set ylabel "Packet Byte Count"
+
+set key outside center below
+set datafile missing "-nan"
+plot 

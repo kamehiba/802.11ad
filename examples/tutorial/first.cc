@@ -23,7 +23,7 @@
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");
-
+void gnuPlotFile();
 int
 main (int argc, char *argv[])
 {
@@ -64,7 +64,56 @@ main (int argc, char *argv[])
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (10.0));
 
+
+  gnuPlotFile();
+
+  Simulator::Stop();
   Simulator::Run ();
   Simulator::Destroy ();
   return 0;
 }
+
+void gnuPlotFile()
+{
+	  std::string probeType = "ns3::Ipv4PacketProbe";
+	  std::string tracePath = "/NodeList/*/$ns3::Ipv4L3Protocol/Tx";
+
+	  // Use GnuplotHelper to plot the packet byte count over time
+	  GnuplotHelper plotHelper;
+
+	  // Configure the plot.  The first argument is the file name prefix
+	  // for the output files generated.  The second, third, and fourth
+	  // arguments are, respectively, the plot title, x-axis, and y-axis labels
+	  plotHelper.ConfigurePlot ("seventh-packet-byte-count",
+	                            "Packet Byte Count vs. Time",
+	                            "Time (Seconds)",
+	                            "Packet Byte Count");
+
+	  // Specify the probe type, trace source path (in configuration namespace), and
+	  // probe output trace source ("OutputBytes") to plot.  The fourth argument
+	  // specifies the name of the data series label on the plot.  The last
+	  // argument formats the plot by specifying where the key should be placed.
+	  plotHelper.PlotProbe (probeType,
+	                        tracePath,
+	                        "OutputBytes",
+	                        "Packet Byte Count",
+	                        GnuplotAggregator::KEY_BELOW);
+
+	  // Use FileHelper to write out the packet byte count over time
+	  FileHelper fileHelper;
+
+	  // Configure the file to be written, and the formatting of output data.
+	  fileHelper.ConfigureFile ("seventh-packet-byte-count",
+	                            FileAggregator::FORMATTED);
+
+	  // Set the labels for this formatted output file.
+	  fileHelper.Set2dFormat ("Time (Seconds) = %.3e\tPacket Byte Count = %.0f");
+
+	  // Specify the probe type, trace source path (in configuration namespace), and
+	  // probe output trace source ("OutputBytes") to write.
+	  fileHelper.WriteProbe (probeType,
+	                         tracePath,
+	                         "OutputBytes");
+
+}
+

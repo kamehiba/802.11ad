@@ -26,15 +26,14 @@
 */
 
 //#include "ns3/lte-module.h"
-//#include "ns3/lte-helper.h"
 //#include "ns3/csma-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/mobility-module.h"
 #include <ns3/buildings-module.h>
-#include "ns3/ipv4-global-routing-helper.h"
 #include "ns3/applications-module.h"
-#include "ns3/point-to-point-helper.h"
 #include "ns3/internet-module.h"
 #include "ns3/config-store-module.h"
 #include "ns3/flow-monitor-module.h"
@@ -43,8 +42,10 @@
 #include "ns3/cone-antenna.h"
 #include "ns3/measured-2d-antenna.h"
 #include <ns3/femtocellBlockAllocator.h>
-#include "ns3/gnuplot.h"
-#include <arpa/inet.h>
+
+#include <fstream>
+#include "ns3/stats-module.h"
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
@@ -84,7 +85,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "1Gb/s";
+	std::string dataRate 				= "512Kb/s";
 	uint32_t packetSize					= 1472;
 	uint32_t appPort					= 9;
 
@@ -120,8 +121,8 @@ int main (int argc, char *argv[])
 ///////////////////////////////////////////////
 
 	/* No fragmentation and no RTS/CTS */
-	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("99999"));
-	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("99999"));
+	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
+	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
 
     //StaWifiMac::StartActiveAssociation
 
@@ -424,6 +425,8 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("//////////////////////////");
 /////////////////////////////////////////////////////
 
+	gnuPlotFile();
+
 	time_t tempoInicio 	= time(NULL);
 	Simulator::Stop (Seconds (simulationTime));
 
@@ -459,6 +462,8 @@ int main (int argc, char *argv[])
 		Simulator::Run ();
 		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 	}
+
+	//std::cout << "Avg throughput111 = " << bytesTotal*8/(lastRxTime-firstRxTime)/1024 << " kbits/sec\n\n" << std::endl;
 
 	std::cout << "========================= " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
@@ -520,32 +525,50 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 		color("31");
 		std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\n";
 		color("0");
-		std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
-		std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
-		std::cout << "  Tx bitrate: " << txbitrate_value << " Mbps\n";
-		std::cout << "  TxOffered:  " << txOffered << " Mbps\n\n";
+		std::cout << "  Tx Packets: " << i->second.txPackets 	<< "\n";
+		std::cout << "  Tx Bytes:   " << i->second.txBytes 		<< "\n";
+		std::cout << "  Tx bitrate: " << txbitrate_value 		<< " Mbps\n";
+		std::cout << "  TxOffered:  " << txOffered 				<< " Mbps\n\n";
 
-		std::cout << "  Rx Packets: " << i->second.rxPackets << "\n";
-		std::cout << "  Rx Bytes:   " << i->second.rxBytes << "\n";
-		std::cout << "  Rx bitrate: " << rxbitrate_value << " Mbps\n\n";
+		std::cout << "  Rx Packets: " << i->second.rxPackets 	<< "\n";
+		std::cout << "  Rx Bytes:   " << i->second.rxBytes 		<< "\n";
+		std::cout << "  Rx bitrate: " << rxbitrate_value 		<< " Mbps\n\n";
 
-		std::cout << "  Throughput: " << throughput << " Mbps\n\n";
+		std::cout << "  Throughput: " << throughput 			<< " Mbps\n\n";
 
-		std::cout << "  Lost Packets: " << i->second.lostPackets << "\n";
-		std::cout << "  Dropped Packets: " << i->second.packetsDropped.size() << "\n";
-		std::cout << "  JitterSum: " << i->second.jitterSum << "\n";
-		std::cout << "  Average delay: " << delay_value << "s\n";
+		std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 	}
 }
 
 void gnuPlotFile()
 {
+//	  GnuplotHelper plotHelper;
+//	  std::string probeType = "ns3::ApplicationPacketProbe";
+//	  std::string tracePath = "/NodeList/*/ApplicationList/*/$ns3::PacketSink/Rx";
+//
+//	  plotHelper.ConfigurePlot ("gnuplot",
+//	                            "Packet Byte Count vs. Time",
+//	                            "Time (Seconds)",
+//	                            "Packet Byte Count",
+//								"png");
+//
+//	  plotHelper.PlotProbe (probeType,
+//							tracePath,
+//							"OutputBytes",
+//							"Packet Byte Count",
+//							GnuplotAggregator::KEY_BELOW);
+//
+
+////////////////////////////////////////////////////////////////////////////////
 	double x=0.0, y=0.0;
-	std::string fileNameWithNoExtension = "gnuplot";
-	std::string graphicsFileName        = fileNameWithNoExtension + ".png";
-	std::string plotFileName            = fileNameWithNoExtension + ".plt";
-	std::string plotTitle               = "Flow vs Throughput";
-	std::string dataTitle               = "Throughput";
+	std::string fileNameWithNoExtension 	= "gnuplot";
+	std::string graphicsFileName        	= fileNameWithNoExtension + ".png";
+	std::string plotFileName            	= fileNameWithNoExtension + ".plt";
+	std::string plotTitle               	= "Flow vs Throughput";
+	std::string dataTitle               	= "Throughput";
 
 	Gnuplot gnuplot (graphicsFileName);
 	Gnuplot2dDataset dataset;
@@ -556,23 +579,17 @@ void gnuPlotFile()
 	gnuplot.SetTitle (plotTitle);
 	gnuplot.SetTerminal ("png");
 	gnuplot.SetLegend ("Flow", "Throughput");
-	//plot.AppendExtra ("set xrange [0:+10]");
+	gnuplot.AppendExtra ("set xrange [0:]");
 
-	//x = diffrx;
-	//y=(i->second.rxBytes * 8.0 / (i->second.timeLastRxPacket.GetSeconds()-i->second.timeFirstTxPacket.GetSeconds()) / 1024 / 1024);
 
-	x = Simulator::Now().GetSeconds();
-	//y=rxbitrate_value;
 
-	dataset.Add((double)x,(double) y);
+	dataset.Add((double)x, (double) y);
 
 	gnuplot.AddDataset (dataset);
 	std::ofstream plotFile (plotFileName.c_str());
 	gnuplot.GenerateOutput (plotFile);
 	plotFile.close ();
 
-	//Simulator::Schedule (Seconds (1.0), &flowmonitorOutput, monitor, flowmon);
-
+//	//Simulator::Schedule (Seconds (1.0), &flowmonitorOutput, monitor, flowmon);
 }
-
 
