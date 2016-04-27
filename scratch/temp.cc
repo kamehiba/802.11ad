@@ -122,7 +122,7 @@ int main (int argc, char *argv[])
 	/* No fragmentation and no RTS/CTS */
 	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
-	Config::Set("/NodeList/[i]/DeviceList/[i]/$ns3::PointToPointNetDevice/DataRate", StringValue(3Mbps) );
+
     //StaWifiMac::StartActiveAssociation
 
 ///////////////////////////////////////////////
