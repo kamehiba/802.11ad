@@ -42,9 +42,8 @@
 #include "ns3/cone-antenna.h"
 #include "ns3/measured-2d-antenna.h"
 #include <ns3/femtocellBlockAllocator.h>
-
-#include <fstream>
 #include "ns3/stats-module.h"
+#include <fstream>
 
 using namespace ns3;
 
@@ -60,7 +59,7 @@ int main (int argc, char *argv[])
 {
 	double simulationTime				= 1;
 
-	double serverStartTime				= 0.01;
+	double appStartTime					= 0.01;
 
 	bool verbose						= true; // packetSink dataFlow
 	bool flowmonitor					= true;
@@ -123,7 +122,7 @@ int main (int argc, char *argv[])
 	/* No fragmentation and no RTS/CTS */
 	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
-
+	Config::Set("/NodeList/[i]/DeviceList/[i]/$ns3::PointToPointNetDevice/DataRate", StringValue(3Mbps) );
     //StaWifiMac::StartActiveAssociation
 
 ///////////////////////////////////////////////
@@ -153,7 +152,7 @@ int main (int argc, char *argv[])
 
 	NS_ASSERT (nAcpoints > 0 && nStations > 0);
 	NS_ASSERT (nFemtocells > 0);
-	NS_ASSERT (serverStartTime < simulationTime);
+	NS_ASSERT (appStartTime < simulationTime);
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Area");
@@ -214,7 +213,6 @@ int main (int argc, char *argv[])
 	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
 
 	QosWifiMacHelper 		wifiMac 	= QosWifiMacHelper::Default ();
-	//VhtWifiMacHelper		wifiMac 	= VhtWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
 	Ssid ssid = Ssid ("ns3-80211ad");
@@ -231,7 +229,7 @@ int main (int argc, char *argv[])
 	wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
 	wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
-	//wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+	wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
 	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
 	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
 
@@ -367,56 +365,17 @@ int main (int argc, char *argv[])
     Config::SetDefault ("ns3::OnOffApplication::OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     Config::SetDefault ("ns3::OnOffApplication::OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
 
-    OnOffHelper onoff(protocol, Address());
-    ApplicationContainer source, sinks;
-    PacketSinkHelper packetSinkHelper(protocol, Address(InetSocketAddress(Ipv4Address::GetAny(), appPort)));
-
+    ApplicationContainer appSource, appSink;
     for (uint32_t i = 0; i < nStations; i++)
     {
-        AddressValue remoteAddress(InetSocketAddress(wifiStaInterface.GetAddress(i), appPort));
-        onoff.SetAttribute("Remote", remoteAddress);
-        source.Add(onoff.Install(remoteHost));
-  		source.Start(Seconds(serverStartTime));
+        OnOffHelper onOffHelper (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
+        appSource = onOffHelper.Install (remoteHost);
+        appSource.Start (Seconds (appStartTime));
 
-        sinks.Add(packetSinkHelper.Install(wifiStaNode.Get(i)));
-        sinks.Start(Seconds(serverStartTime));
+		PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+		appSink = sink.Install (wifiStaNode.Get(i));
+		appSink.Start (Seconds (appStartTime));
     }
-
-
-
-//    ApplicationContainer serverApp, sinkApp;
-//    for (uint32_t i = 0; i < nStations; i++)
-//    {
-//        UdpServerHelper myServer (appPort);
-//        serverApp = myServer.Install (wifiStaNode.Get (i));
-//        serverApp.Start (Seconds (serverStartTime));
-//
-//        UdpClientHelper myClient (wifiStaInterface.GetAddress (i), appPort);
-//        myClient.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
-//        myClient.SetAttribute ("Interval", TimeValue (Time ("0.00001"))); //packets/s
-//        myClient.SetAttribute ("PacketSize", UintegerValue (packetSize));
-//
-//        ApplicationContainer clientApp = myClient.Install (remoteHost);
-//        clientApp.Start (Seconds (serverStartTime));
-//    }
-
-
-
-//	for (uint32_t u = 0;u < nStations; u++)
-//	{
-//		ApplicationContainer serverApps, clientApps;
-//		PacketSinkHelper dlPacketSinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), appPort));
-//		serverApps.Add (dlPacketSinkHelper.Install (wifiStaNode.Get(u)));
-//
-//		UdpClientHelper dlClient (wifiStaInterface.GetAddress (u), appPort);
-//		dlClient.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
-//		dlClient.SetAttribute ("Interval", TimeValue (Time ("0.00001"))); //packets/s
-//		dlClient.SetAttribute ("PacketSize", UintegerValue (packetSize));
-//		clientApps.Add (dlClient.Install (remoteHost));
-//
-//		UdpServerHelper udpServer = UdpServerHelper (appPort);
-//		clientApps = udpServer.Install (wifiStaNode.Get(u));
-//	}
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -462,8 +421,6 @@ int main (int argc, char *argv[])
 		Simulator::Run ();
 		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 	}
-
-	//std::cout << "Avg throughput111 = " << bytesTotal*8/(lastRxTime-firstRxTime)/1024 << " kbits/sec\n\n" << std::endl;
 
 	std::cout << "========================= " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
