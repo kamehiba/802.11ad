@@ -93,7 +93,7 @@ FlywaysWifiMac::FlywaysWifiMac ()
   m_dcfManager = new DcfManager ();
   m_dcfManager->SetupLowListener (m_low);
 
-  SetQueue (AC_VI);
+  SetQueue (AC_BE);
 }
 
 FlywaysWifiMac::~FlywaysWifiMac ()
@@ -512,12 +512,12 @@ FlywaysWifiMac::FinishConfigureStandard (enum WifiPhyStandard standard)
     case WIFI_PHY_STANDARD_80211ad_OFDM:
       ConfigureDcf (m_queue, 3, 1023, AC_VI);
       break;
-//    case WIFI_PHY_STANDARD_80211a:
-//      ConfigureDcf (m_queue, 15, 1023, AC_BE);
-//      break;
-//    case WIFI_PHY_STANDARD_80211b:
-//      ConfigureDcf (m_queue, 31, 1023, AC_BE);
-//      break;
+    case WIFI_PHY_STANDARD_80211a:
+      ConfigureDcf (m_queue, 15, 1023, AC_BE);
+      break;
+    case WIFI_PHY_STANDARD_80211b:
+      ConfigureDcf (m_queue, 31, 1023, AC_BE);
+      break;
     default:
       NS_FATAL_ERROR ("invalid standard must be 11ad");
       break;
