@@ -255,6 +255,8 @@ int main (int argc, char *argv[])
 
 	if(use2DAntenna)
 	{
+		NS_LOG_UNCOND ("==> Initializing 2D Antenna");
+
 		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
 		m2DAntenna->SetMode(10);
 
@@ -315,7 +317,7 @@ int main (int argc, char *argv[])
 	BuildingsHelper::Install (routerContainer);
 
 	NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
-	MobilityHelper enbMobility;
+	MobilityHelper apMobility;
 	Ptr<PositionAllocator> enbPositionAlloc;
 	enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
 	Ptr<UniformRandomVariable> xVal = CreateObject<UniformRandomVariable> ();
@@ -330,13 +332,13 @@ int main (int argc, char *argv[])
 	zVal->SetAttribute ("Min", DoubleValue (boxArea.zMin));
 	zVal->SetAttribute ("Max", DoubleValue (boxArea.zMax));
 	enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-	enbMobility.SetPositionAllocator (enbPositionAlloc);
-	enbMobility.Install (wifiApNode);
+	apMobility.SetPositionAllocator (enbPositionAlloc);
+	apMobility.Install (wifiApNode);
 	BuildingsHelper::Install (wifiApNode);
 
 	NS_LOG_UNCOND ("Randomly allocating wifiStaNode inside the boxArea");
-	MobilityHelper uemobility;
-	uemobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
+	MobilityHelper stamobility;
+	stamobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinX", 		DoubleValue (boxArea.xMin));
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxX", 		DoubleValue (boxArea.xMax));
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinY", 		DoubleValue (boxArea.yMin));
@@ -346,8 +348,8 @@ int main (int argc, char *argv[])
 	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (staSpeed));
 	Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
 	ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-	uemobility.SetPositionAllocator (ueRandomPositionAlloc);
-	uemobility.Install (wifiStaNode);
+	stamobility.SetPositionAllocator (ueRandomPositionAlloc);
+	stamobility.Install (wifiStaNode);
 	for (NodeContainer::Iterator it = wifiStaNode.Begin (); it != wifiStaNode.End (); ++it)
 	  (*it)->Initialize ();
 	BuildingsHelper::Install (wifiStaNode);
