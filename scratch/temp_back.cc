@@ -18,19 +18,20 @@
  Default Network Topology
 
 
-	RH
- 	 *
-	 -
-	 -
-	 Router
-	 *
-	 -
-	 -
-   	 APs
-   	 *
-   	 -
-   	 -
-   	 *Sta
+	RH wifi				RH Lte
+ 	 *					*
+	 -					-
+	 -					-
+	 Router				PGW
+	 *					*
+	 -					-
+	 -					-
+   	 APs				ENB
+   	 *					*
+   	 -					-
+   	 -	-			-
+   	 	 	 -
+   	 	 	 *Sta
 
 */
 

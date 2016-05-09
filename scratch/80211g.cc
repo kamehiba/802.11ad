@@ -32,6 +32,7 @@
    	 -	-			-
    	 	 	 -
    	 	 	 *Sta
+
 */
 
 #include "ns3/core-module.h"
@@ -40,8 +41,6 @@
 #include "ns3/mobility-module.h"
 #include "ns3/stats-module.h"
 #include "ns3/wifi-module.h"
-#include <iostream>
-
 #include "ns3/lte-helper.h"
 #include "ns3/epc-helper.h"
 #include <ns3/point-to-point-epc-helper.h>
@@ -52,18 +51,9 @@
 #include "ns3/flow-monitor-module.h"
 #include "ns3/flow-monitor.h"
 #include "ns3/netanim-module.h"
-#include "ns3/cone-antenna.h"
-#include "ns3/measured-2d-antenna.h"
-#include <ns3/femtocellBlockAllocator.h>
 #include "ns3/stats-module.h"
 #include <fstream>
-
-#include <arpa/inet.h>
-#include <cstdlib>
-#include "ns3/log.h"
-#include "ns3/assert.h"
-
-
+#include <iostream>
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("debug");
@@ -98,12 +88,6 @@ public:
 	void setNetanim(bool var) {m_netAnim = var;};
 	bool getNetanim() { return m_netAnim;};
 
-	void setUseFemtocells(bool var) {m_useFemtocells = var;};
-	bool getUseFemtocells() { return m_useFemtocells;};
-
-	void setUse2DAntenna(bool var) {m_use2DAntenna = var;};
-	bool getUse2DAntenna() { return m_use2DAntenna;};
-
 	void setStopApp(bool var) {m_stopApp = var;};
 	bool getStopApp() { return m_stopApp;};
 
@@ -118,15 +102,6 @@ public:
 
 	void setEnableLteEpsBearer(bool var) {m_enableLteEpsBearer = var;};
 	bool getEnableLteEpsBearer() { return m_enableLteEpsBearer;};
-
-	void setNFemtocells(uint32_t var) {m_nFemtocells = var;};
-	uint32_t getNFemtocells() { return m_nFemtocells;};
-
-	void setNApartmentsX(uint32_t var) {m_nApartmentsX = var;};
-	uint32_t getNApartmentsX() { return m_nApartmentsX;};
-
-	void setNFloors(uint32_t var) {m_nFloors = var;};
-	uint32_t getNFloors() { return m_nFloors;};
 
 	void setWifiChannelNumber(uint32_t var) {m_wifiChannelNumber = var;};
 	uint32_t getWifiChannelNumber() { return m_wifiChannelNumber;};
@@ -213,19 +188,13 @@ private:
 	double m_appStartTime;
 
 	bool m_flowmonitor;
-	bool m_useFemtocells;
 	bool m_tracing;
 	bool m_netAnim;
-	bool m_use2DAntenna;
 	bool m_stopApp;
 	bool m_showPacketSink;
 	bool m_showSimulationTime;
 	bool m_showConfigs;
 	bool m_enableLteEpsBearer;
-
-	uint32_t m_nFemtocells;
-	uint32_t m_nApartmentsX;
-	uint32_t m_nFloors;
 
 	uint32_t m_wifiChannelNumber;
 	uint32_t m_nTxAntennas;
@@ -267,7 +236,7 @@ Experiment::Experiment ()
 	m_output.SetStyle (Gnuplot2dDataset::LINES);
 
 	m_outFileName 			= "debug";
-	m_gnuplotFileName		= "80211ad.png";
+	m_gnuplotFileName		= "80211g.png";
 
 	m_simulationTime 		= 10;
 	m_appStartTime 			= 0.01;
@@ -285,16 +254,10 @@ Experiment::Experiment ()
 
 	//Area Vars
 	m_BoxXmin				= 0;
-	m_BoxXmax				= 5;
+	m_BoxXmax				= 25;
 	m_BoxYmin				= 0;
-	m_BoxYmax				= 5;
+	m_BoxYmax				= 10;
 	m_boxArea = Box (m_BoxXmin, m_BoxXmax, m_BoxYmin, m_BoxYmax, 0, 0);
-
-	//Femtocells Vars
-	m_useFemtocells			= true;
-	m_nFemtocells			= 1;
-	m_nApartmentsX			= 1;
-	m_nFloors				= 1;
 
 	//APP Vars
 	m_dataRate 				= "512Kb/s";
@@ -313,7 +276,6 @@ Experiment::Experiment ()
 	m_netMask				= "255.0.0.0";
 
 	//WIFI Vars
-	m_use2DAntenna			= true;
 	m_wifiChannelNumber 	= 1;
 	m_nTxAntennas 			= 1;
 	m_nRxAntennas 			= 1;
@@ -366,7 +328,6 @@ Experiment::showConfigs()
 	std::cout << "Access Points: " << this->getNApoints() << "\n";
 	std::cout << "Stations: " << this->getNStations() << "\n";
 	std::cout << "UE Speed: " << this->getStaSpeed() << "m/s" << " <> " << this->getStaSpeed()*3.6 << "km/h\n";
-	this->getUseFemtocells() == true ? std::cout << "Femtocells: " << this->getNFemtocells() << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << this->getDataRate() << "\n";
 	std::cout << "Area: " << (this->getBoxArea().xMax - this->getBoxArea().xMin) * (this->getBoxArea().yMax - this->getBoxArea().yMin) << "m²\n";
 	std::cout << "========================= " << "\n";
@@ -429,16 +390,6 @@ Gnuplot2dDataset
 Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
                  const QosWifiMacHelper &wifiMac, const YansWifiChannelHelper &wifiChannel)
 {
-///////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Creating FemtocellBlock");
-///////////////////////////////////////////////
-
-	if(this->getUseFemtocells())
-	{
-		FemtocellBlockAllocator blockAllocator (this->getBoxArea(), this->getNApartmentsX(), this->getNFloors());
-		blockAllocator.Create (this->getNFemtocells());
-	}
-
 ///////////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating WIFI Nodes");
 ///////////////////////////////////////////////////////////
@@ -481,7 +432,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	YansWifiPhyHelper phy = wifiPhy;
 	phy.SetChannel (wifiChannel.Create ());
 	phy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
-	phy.SetErrorRateModel ("ns3::SensitivityModel60GHz");
 	phy.Set ("ChannelNumber", UintegerValue(this->getWifiChannelNumber()));
 	phy.Set ("TxAntennas", UintegerValue (this->getNTxAntennas()));
 	phy.Set ("RxAntennas", UintegerValue (this->getNRxAntennas()));
@@ -499,7 +449,7 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	mac.SetBlockAckThresholdForAc(AC_VI, 2);
 	mac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (m_maxAmsduSize));
 
-	Ssid ssid = Ssid ("ns3-80211ad");
+	Ssid ssid = Ssid ("ns3-80211g");
 	NetDeviceContainer wifiAPDevice, wifiStaDevice;
 
 	mac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
@@ -507,20 +457,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 
 	mac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
 	wifiStaDevice.Add (wifi.Install (phy, mac, wifiStaNode));
-
-	if(this->getUse2DAntenna())
-	{
-		NS_LOG_UNCOND ("==> Initializing 2D Antenna");
-
-		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
-		m2DAntenna->SetMode(10);
-
-		for (uint32_t u = 0; u < this->getNApoints(); ++u)
-			wifiAPDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
-
-		for (uint32_t u = 0; u < this->getNStations(); ++u)
-			wifiStaDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
-	}
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -575,24 +511,14 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	routermobility.Install(routerNode);
 	BuildingsHelper::Install (routerNode);
 
-	NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
+	NS_LOG_UNCOND ("Installing mobility on wifiApNode");
 	MobilityHelper apMobility;
-	Ptr<PositionAllocator> apPositionAlloc;
-	apPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-	Ptr<UniformRandomVariable> xVal = CreateObject<UniformRandomVariable> ();
-	xVal->SetAttribute ("Min", DoubleValue (this->getBoxArea().xMin));
-	xVal->SetAttribute ("Max", DoubleValue (this->getBoxArea().xMax));
-	apPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-	Ptr<UniformRandomVariable> yVal = CreateObject<UniformRandomVariable> ();
-	yVal->SetAttribute ("Min", DoubleValue (this->getBoxArea().yMin));
-	yVal->SetAttribute ("Max", DoubleValue (this->getBoxArea().yMax));
-	apPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-	Ptr<UniformRandomVariable> zVal = CreateObject<UniformRandomVariable> ();
-	zVal->SetAttribute ("Min", DoubleValue (this->getBoxArea().zMin));
-	zVal->SetAttribute ("Max", DoubleValue (this->getBoxArea().zMax));
-	apPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-	apMobility.SetPositionAllocator (apPositionAlloc);
-	apMobility.Install (wifiApNode);
+	Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
+	apPositionAlloc = CreateObject<ListPositionAllocator> ();
+	apPositionAlloc->Add (Vector (0.0, 5.0, 0.0));
+	apMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+	apMobility.SetPositionAllocator(apPositionAlloc);
+	apMobility.Install(wifiApNode);
 	BuildingsHelper::Install (wifiApNode);
 
 	NS_LOG_UNCOND ("Randomly allocating wifiStaNode inside the boxArea");
@@ -655,7 +581,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
 	Ptr<Node> 	pgw;
 
-	//lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::BuildingsObstaclePropagationLossModel"));
 	lteHelper->SetEpcHelper (epcHelper);
 	pgw = epcHelper->GetPgwNode ();
 
@@ -713,26 +638,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	enbMobility.SetPositionAllocator(enbPositionAlloc);
 	enbMobility.Install(enbNodes);
 	BuildingsHelper::Install (enbNodes);
-
-//	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea LTE");
-//	MobilityHelper enbMobility;
-//	Ptr<PositionAllocator> enbPositionAlloc;
-//	enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	Ptr<UniformRandomVariable> xVal1 = CreateObject<UniformRandomVariable> ();
-//	xVal1->SetAttribute ("Min", DoubleValue (this->getBoxArea().xMin));
-//	xVal1->SetAttribute ("Max", DoubleValue (this->getBoxArea().xMax));
-//	enbPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-//	Ptr<UniformRandomVariable> yVal1 = CreateObject<UniformRandomVariable> ();
-//	yVal1->SetAttribute ("Min", DoubleValue (this->getBoxArea().yMin));
-//	yVal1->SetAttribute ("Max", DoubleValue (this->getBoxArea().yMax));
-//	enbPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-//	Ptr<UniformRandomVariable> zVal1 = CreateObject<UniformRandomVariable> ();
-//	zVal1->SetAttribute ("Min", DoubleValue (this->getBoxArea().zMin));
-//	zVal1->SetAttribute ("Max", DoubleValue (this->getBoxArea().zMax));
-//	enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-//	enbMobility.SetPositionAllocator (enbPositionAlloc);
-//	enbMobility.Install (enbNodes);
-//	BuildingsHelper::Install (enbNodes);
 
 ////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Installing  Devices to the nodes LTE");
@@ -809,7 +714,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 
 	if(this->getTracing())
 	{
-		////wifi.EnablePcap (this->getOutFileName(), wifiAPDevice.Get (0));
 		phy.EnablePcapAll (this->getOutFileName(), true);
 		p2ph.EnablePcapAll (this->getOutFileName(), true);
 
@@ -826,7 +730,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	if(this->getNetanim())
 	{
 		AnimationInterface anim (this->getOutFileName()+"_anim.xml");
-		//anim.SetConstantPosition (wifiApNode, 0.0, 0.0);
 	}
 
 	if(this->getShowConfigs())
@@ -873,7 +776,6 @@ int main (int argc, char *argv[])
 
 	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
 	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
-
 	Config::SetDefault ("ns3::OnOffApplication::DataRate", DataRateValue(DataRate(experiment.getDataRate())));
 	Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (experiment.getPacketSize()));
 	Config::SetDefault ("ns3::OnOffApplication::OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
@@ -893,7 +795,6 @@ int main (int argc, char *argv[])
 ///////////////////////////////////////////////
 
 	NS_ASSERT (experiment.getNApoints() > 0 && experiment.getNApoints() > 0);
-	NS_ASSERT (experiment.getNFemtocells() > 0);
 	NS_ASSERT (experiment.getAppStartTime() < experiment.getSimulationTime());
 
 	YansWifiPhyHelper 		wifiPhy 	= YansWifiPhyHelper::Default ();
@@ -901,24 +802,17 @@ int main (int argc, char *argv[])
 	QosWifiMacHelper 		wifiMac		= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
-	wifi.SetStandard (WIFI_PHY_STANDARD_80211ad_OFDM);
+	wifi.SetStandard (WIFI_PHY_STANDARD_80211g);
 	wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-	wifiMac.SetType ("ns3::FlywaysWifiMac");
+	wifiMac.SetType ("ns3::AdhocWifiMac");
 
 	Gnuplot gnuplot = Gnuplot (experiment.getGnuplotFileName());
 	Gnuplot2dDataset dataset;
-	gnuplot.SetTitle ("802.11ad");
+	gnuplot.SetTitle ("802.11g");
 	gnuplot.SetLegend ("Time (secs)", "Flow Mb/s");
-
-
 
 	dataset = experiment.Run (wifi, wifiPhy, wifiMac, wifiChannel);
 	gnuplot.AddDataset (dataset);
-
-
-
-
-
 
 	std::cout << "==========GNUPLOT======== " << "\n";
 	gnuplot.GenerateOutput (std::cout);

@@ -17,11 +17,20 @@
 
  Default Network Topology
 
-   APs
-   *
-   -
-   -
-   - Sta
+	RH wifi				RH Lte
+ 	 *					*
+	 -					-
+	 -					-
+	 Router				PGW
+	 *					*
+	 -					-
+	 -					-
+   	 APs				ENB
+   	 *					*
+   	 -					-
+   	 -	-			-
+   	 	 	 -
+   	 	 	 *Sta
 
 */
 
@@ -52,17 +61,17 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 #define color(param) printf("\033[%sm",param)
 
 void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*);
-void gnuPlotFile();
+void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset DataSet);
 
 int main (int argc, char *argv[])
 {
-	double simulationTime				= 1;
+	double simulationTime				= 10;
 
 	double appStartTime					= 0.01;
 
-	bool verbose						= true; // packetSink dataFlow
+	bool verbose						= false; // packetSink dataFlow
 	bool flowmonitor					= true;
+	bool showConf						= false;
 	bool netAnim						= false;
 	bool tracing						= false;
 
@@ -84,7 +93,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "512Kb/s";
+	std::string dataRate 				= "1Gb/s";
 	uint32_t packetSize					= 1472;
 	uint32_t appPort					= 9;
 
@@ -103,7 +112,7 @@ int main (int argc, char *argv[])
 
 	//Nodes Vars
 	double staSpeed						= 1.0; 	// m/s.
-	uint32_t nAcpoints 					= 3; 	// Access Points
+	uint32_t nAcpoints 					= 1; 	// Access Points
 	uint32_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
@@ -188,7 +197,7 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("Installing p2p");
+	NS_LOG_UNCOND ("==> Installing p2p");
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -209,7 +218,6 @@ int main (int argc, char *argv[])
 
 	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
 	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-
 	QosWifiMacHelper 		wifiMac 	= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
@@ -384,8 +392,6 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("//////////////////////////");
 /////////////////////////////////////////////////////
 
-	gnuPlotFile();
-
 	time_t tempoInicio 	= time(NULL);
 	Simulator::Stop (Seconds (simulationTime));
 
@@ -403,18 +409,39 @@ int main (int argc, char *argv[])
 		//anim.SetConstantPosition (ueNode, 0.0, 0.0);
 	}
 
+	if(showConf)
+		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+
 	if(flowmonitor)
 	{
-		FlowMonitorHelper flowmon;
-		Ptr<FlowMonitor> monitor = flowmon.InstallAll();
+		std::string fileNameWithNoExtension = "gnuplot";
+		std::string graphicsFileName        = fileNameWithNoExtension + ".png";
+		std::string plotFileName            = fileNameWithNoExtension + ".plt";
+		std::string plotTitle               = "Flow vs Throughput";
+		std::string dataTitle               = "Throughput";
+
+		Gnuplot gnuplot (graphicsFileName);
+		gnuplot.SetTitle (plotTitle);
+
+		gnuplot.SetTerminal ("png");
+		gnuplot.SetLegend ("Flow", "Throughput");
+
+		Gnuplot2dDataset dataset;
+		dataset.SetTitle (dataTitle);
+		dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
+
+		FlowMonitorHelper fmHelper;
+		Ptr<FlowMonitor> allMon = fmHelper.InstallAll();
+		allMon->CheckForLostPackets ();
+		allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
+		flowmonitorOutput(allMon, &fmHelper, dataset);
 
 		Simulator::Run ();
 
-		monitor->CheckForLostPackets ();
-		monitor->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
-
-		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
-		flowmonitorOutput(monitor, &flowmon);
+		gnuplot.AddDataset (dataset);
+		std::ofstream plotFile (plotFileName.c_str());
+		gnuplot.GenerateOutput (plotFile);
+		plotFile.close ();
 	}
 	else
 	{
@@ -448,11 +475,11 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocell
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
 }
 
-void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
+void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet)
 {
 	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, txOffered=0.0, rxbitrate_value=0.0, delay_value=0.0, throughput=0.0;
-	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon->GetClassifier ());
-	FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
+	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier ());
+	FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats ();
 
 	for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 	{
@@ -497,58 +524,9 @@ void flowmonitorOutput(Ptr<FlowMonitor> monitor, FlowMonitorHelper *flowmon)
 		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+
+		dataSet.Add((double)Simulator::Now().GetSeconds(),(double) txOffered);
 	}
+
+	Simulator::Schedule(Seconds(1),&flowmonitorOutput, flowMon, fmhelper, dataSet);
 }
-
-void gnuPlotFile()
-{
-//	  GnuplotHelper plotHelper;
-//	  std::string probeType = "ns3::ApplicationPacketProbe";
-//	  std::string tracePath = "/NodeList/*/ApplicationList/*/$ns3::PacketSink/Rx";
-//
-//	  plotHelper.ConfigurePlot ("gnuplot",
-//	                            "Packet Byte Count vs. Time",
-//	                            "Time (Seconds)",
-//	                            "Packet Byte Count",
-//								"png");
-//
-//	  plotHelper.PlotProbe (probeType,
-//							tracePath,
-//							"OutputBytes",
-//							"Packet Byte Count",
-//							GnuplotAggregator::KEY_BELOW);
-//
-
-////////////////////////////////////////////////////////////////////////////////
-
-	double x=0.0, y=0.0;
-	std::string fileNameWithNoExtension 	= "gnuplot";
-	std::string graphicsFileName        	= fileNameWithNoExtension + ".png";
-	std::string plotFileName            	= fileNameWithNoExtension + ".plt";
-	std::string plotTitle               	= "Flow vs Throughput";
-	std::string dataTitle               	= "Throughput";
-
-	Gnuplot gnuplot (graphicsFileName);
-	Gnuplot2dDataset dataset;
-
-	dataset.SetTitle (dataTitle);
-	dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
-
-	gnuplot.SetTitle (plotTitle);
-	gnuplot.SetTerminal ("png");
-	gnuplot.SetLegend ("Flow", "Throughput");
-	gnuplot.AppendExtra ("set xrange [0:]");
-
-	//x=
-	//y=
-
-	dataset.Add((double)x, (double) y);
-
-	gnuplot.AddDataset (dataset);
-	std::ofstream plotFile (plotFileName.c_str());
-	gnuplot.GenerateOutput (plotFile);
-	plotFile.close ();
-
-//	//Simulator::Schedule (Seconds (1.0), &flowmonitorOutput, monitor, flowmon);
-}
-
