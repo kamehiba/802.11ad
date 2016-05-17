@@ -93,7 +93,7 @@ int main (int argc, char *argv[])
 
 	//APP Vars
     std::string protocol 				= "ns3::UdpSocketFactory";
-	std::string dataRate 				= "1Gb/s";
+	std::string dataRate 				= "7Gb/s";
 	uint32_t packetSize					= 1472;
 	uint32_t appPort					= 9;
 
@@ -477,6 +477,7 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocell
 
 void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet)
 {
+	double x=0.0, y=0.0;
 	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, txOffered=0.0, rxbitrate_value=0.0, delay_value=0.0, throughput=0.0;
 	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats ();
@@ -525,7 +526,9 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
-		dataSet.Add((double)Simulator::Now().GetSeconds(),(double) txOffered);
+		x = (double) Simulator::Now().GetSeconds();
+		y = (double) txOffered;
+		dataSet.Add(x,y);
 	}
 
 	Simulator::Schedule(Seconds(1),&flowmonitorOutput, flowMon, fmhelper, dataSet);
