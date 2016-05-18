@@ -65,7 +65,7 @@ void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset Dat
 
 int main (int argc, char *argv[])
 {
-	double simulationTime				= 20;
+	double simulationTime				= 10;
 
 	double appStartTime					= 0.01;
 
@@ -92,8 +92,8 @@ int main (int argc, char *argv[])
 	uint32_t nApartmentsX				= 1;
 
 	//APP Vars
-    std::string protocol 				= "ns3::UdpSocketFactory";
 	std::string dataRate 				= "512Kb/s";
+    std::string protocol 				= "ns3::UdpSocketFactory";
 	uint32_t packetSize					= 1472;
 	uint32_t appPort					= 9;
 
@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
 	//Nodes Vars
 	double staSpeed						= 1.0; 	// m/s.
 	uint32_t nAcpoints 					= 1; 	// Access Points
-	uint32_t nStations 					= 2;	// Stations
+	uint32_t nStations 					= 1;	// Stations
 
 	std::string outFileName				= "debug";
 
@@ -197,7 +197,7 @@ int main (int argc, char *argv[])
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("Installing p2p");
+	NS_LOG_UNCOND ("==> Installing p2p");
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -218,7 +218,6 @@ int main (int argc, char *argv[])
 
 	YansWifiChannelHelper 	wifiChannel = YansWifiChannelHelper::Default ();
 	YansWifiPhyHelper 	 	wifiPhy		= YansWifiPhyHelper::Default ();
-
 	QosWifiMacHelper 		wifiMac 	= QosWifiMacHelper::Default ();
 	WifiHelper 				wifi;
 
@@ -363,6 +362,7 @@ int main (int argc, char *argv[])
 	  (*it)->Initialize ();
 	BuildingsHelper::Install (wifiStaNode);
 
+
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Initializing Applications");//
@@ -478,6 +478,7 @@ void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocell
 
 void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet)
 {
+	double x=0.0, y=0.0;
 	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, txOffered=0.0, rxbitrate_value=0.0, delay_value=0.0, throughput=0.0;
 	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats ();
@@ -526,7 +527,9 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
-		dataSet.Add((double)Simulator::Now().GetSeconds(),(double) throughput);
+		x = (double) Simulator::Now().GetSeconds();
+		y = (double) txOffered;
+		dataSet.Add(x,y);
 	}
 
 	Simulator::Schedule(Seconds(1),&flowmonitorOutput, flowMon, fmhelper, dataSet);

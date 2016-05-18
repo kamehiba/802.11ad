@@ -614,30 +614,6 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 	  (*it)->Initialize ();
 	BuildingsHelper::Install (wifiStaNode);
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Initializing Applications");//
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-
-    ApplicationContainer appSource, appSink;
-	OnOffHelper onOffHelper (this->getProtocol(), Address (InetSocketAddress (wifiStaInterface.GetAddress(0), this->getWifiPort())));
-	appSource = onOffHelper.Install (remoteHost);
-	appSource.Start (Seconds (this->getAppStartTime()));
-	if(this->getStopApp())
-		appSource.Stop (Seconds (this->getSimulationTime()));
-
-	PacketSinkHelper sink (this->getProtocol(),Address (InetSocketAddress (Ipv4Address::GetAny (), this->getWifiPort())));
-	appSink = sink.Install (wifiStaNode.Get(0));
-	appSink.Start (Seconds (this->getAppStartTime()));
-	if(this->getStopApp())
-		appSink.Stop (Seconds (this->getSimulationTime()));
-
-	Simulator::Schedule (Seconds (1.0), &Experiment::GetRate, this, wifiStaNode.Get (0));
-	Ptr<Socket> recvSink = SetupPacketReceive (wifiStaNode.Get (0));
-
-	m_output.SetTitle("wifi");
-
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Innitializing LTE <==");
@@ -763,40 +739,70 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 
 	lteHelper->AttachToClosestEnb (staDevs, enbDevs);
 
-///////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Installing  applications LTE");
-//////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Initializing Applications");//
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
 
-    ApplicationContainer appSource2, appSink2;
-	OnOffHelper onOffHelper2 (this->getProtocol(), Address (InetSocketAddress (ueIpIface.GetAddress(0), this->getLtePort())));
-	appSource2 = onOffHelper2.Install (remoteHostLTE);
-	appSource2.Start (Seconds (this->getAppStartTime()));
-	if(this->getStopApp())
-		appSource2.Stop (Seconds (this->getSimulationTime()));
-
-	PacketSinkHelper sink2 (this->getProtocol(),Address (InetSocketAddress (Ipv4Address::GetAny (), this->getLtePort())));
-	appSink2 = sink2.Install (wifiStaNode.Get(0));
-	appSink2.Start (Seconds (this->getAppStartTime()));
-	if(this->getStopApp())
-		appSink2.Stop (Seconds (this->getSimulationTime()));
-
-	if(this->getEnableLteEpsBearer())
+	bool close_to_wifi = true;
+	if(close_to_wifi)
 	{
-		EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
-		Ptr<EpcTft> tft = Create<EpcTft> ();
+		NS_LOG_UNCOND ("Initializing apps WIFI");
+		ApplicationContainer appSourceWifi, appSinkWifi;
+		OnOffHelper onOffHelperWifi (this->getProtocol(), Address (InetSocketAddress (wifiStaInterface.GetAddress(0), this->getWifiPort())));
+		appSourceWifi = onOffHelperWifi.Install (remoteHost);
+		appSourceWifi.Start (Seconds (this->getAppStartTime()));
+		if(this->getStopApp())
+			appSourceWifi.Stop (Seconds (this->getSimulationTime()));
 
-		NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
-		EpcTft::PacketFilter dlpf;
-		dlpf.localPortStart = this->getLtePort();
-		dlpf.localPortEnd = this->getLtePort();
-		tft->Add (dlpf);
-		lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(0), bearer, tft);
+		NS_LOG_UNCOND ("Initializing sink WIFI");
+		PacketSinkHelper sinkWifi (this->getProtocol(),Address (InetSocketAddress (Ipv4Address::GetAny (), this->getWifiPort())));
+		appSinkWifi = sinkWifi.Install (wifiStaNode.Get(0));
+		appSinkWifi.Start (Seconds (this->getAppStartTime()));
+		if(this->getStopApp())
+			appSinkWifi.Stop (Seconds (this->getSimulationTime()));
+
+		Simulator::Schedule (Seconds (1.0), &Experiment::GetRate, this, wifiStaNode.Get (0));
+		Ptr<Socket> recvSink = SetupPacketReceive (wifiStaNode.Get (0));
+
+		m_output.SetTitle("wifi");
 	}
+	else
+	{
+		NS_LOG_UNCOND ("Initializing apps LTE");
+		ApplicationContainer appSourceLTE, appSinkLTE;
+		OnOffHelper onOffHelperLTE (this->getProtocol(), Address (InetSocketAddress (ueIpIface.GetAddress(0), this->getLtePort())));
+		appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
+		appSourceLTE.Start (Seconds (this->getAppStartTime()));
+		if(this->getStopApp())
+			appSourceLTE.Stop (Seconds (this->getSimulationTime()));
 
-	Simulator::Schedule (Seconds (1.0), &Experiment::GetRate, this, wifiStaNode.Get (0));
-	Ptr<Socket> recvSink2 = SetupPacketReceive (wifiStaNode.Get (0));
+		NS_LOG_UNCOND ("Initializing sink LTE");
+		PacketSinkHelper sinkLTE (this->getProtocol(),Address (InetSocketAddress (Ipv4Address::GetAny (), this->getLtePort())));
+		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(0));
+		appSinkLTE.Start (Seconds (this->getAppStartTime()));
+		if(this->getStopApp())
+			appSinkLTE.Stop (Seconds (this->getSimulationTime()));
 
-	m_output.SetTitle("lte");
+		if(this->getEnableLteEpsBearer())
+		{
+			EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
+			Ptr<EpcTft> tft = Create<EpcTft> ();
+
+			NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
+			EpcTft::PacketFilter dlpf;
+			dlpf.localPortStart = this->getLtePort();
+			dlpf.localPortEnd = this->getLtePort();
+			tft->Add (dlpf);
+			lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(0), bearer, tft);
+		}
+
+		Simulator::Schedule (Seconds (1.0), &Experiment::GetRate, this, wifiStaNode.Get (0));
+		Ptr<Socket> recvSink2 = SetupPacketReceive (wifiStaNode.Get (0));
+
+		m_output.SetTitle("lte");
+	}
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
