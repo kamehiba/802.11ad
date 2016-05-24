@@ -520,8 +520,9 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	bool close_to_wifi = true;
-	if(close_to_wifi)
+	bool temp = wifiStaDevice.Get(0)->GetObject<WifiNetDevice>()->IsLinkUp();
+
+	if(!temp)
 	{
 		NS_LOG_UNCOND ("Initializing apps WIFI");
 
@@ -713,8 +714,8 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 		x = (double) Simulator::Now().GetSeconds();
-		//y = (double) txOffered;
-		y = throughput;
+		y = (double) txOffered;
+		//y = throughput;
 		dataSet.Add(x,y);
 	}
 

@@ -514,31 +514,15 @@ int main (int argc, char *argv[])
 
 	lteHelper->AttachToClosestEnb (staDevs, enbDevs);
 
-///////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Calculating MinDistance");
-///////////////////////////////////////////
-
-	Vector uepos = staDevs.Get(0)->GetNode ()->GetObject<MobilityModel> ()->GetPosition ();
-	  double minDistance = std::numeric_limits<double>::infinity ();
-	  Ptr<NetDevice> closestEnbDevice;
-	  for (NetDeviceContainer::Iterator i = enbDevs.Begin (); i != enbDevs.End (); ++i)
-	    {
-	      Vector enbpos = (*i)->GetNode ()->GetObject<MobilityModel> ()->GetPosition ();
-	      double distance = CalculateDistance (uepos, enbpos);
-	      if (distance < minDistance)
-	        {
-	          minDistance = distance;
-	          closestEnbDevice = *i;
-	        }
-	    }
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Initializing Applications");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	//bool close_to_wifi = true;
-	if(closestEnbDevice != enbDevs.Get(0))
+	bool linkUp = wifiStaDevice.Get(0)->GetObject<WifiNetDevice>()->IsLinkUp();
+
+	if(!linkUp)
 	{
 		NS_LOG_UNCOND ("Initializing apps WIFI");
 
