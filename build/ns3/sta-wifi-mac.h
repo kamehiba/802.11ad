@@ -82,6 +82,7 @@ public:
    */
   void StartActiveAssociation (void);
 
+  bool IsAssociatedPublic(void);
 
 private:
   /**
@@ -95,7 +96,12 @@ private:
     BEACON_MISSED,
     REFUSED
   };
-
+  /**
+   * Return whether we are associated with an AP.
+   *
+   * \return true if we are associated with an AP, false otherwise
+   */
+  bool IsAssociated (void) const;
   /**
    * Enable or disable active probing.
    *
@@ -136,12 +142,6 @@ private:
    * WAIT_PROBE_RESP and re-send a probe request.
    */
   void ProbeRequestTimeout (void);
-  /**
-   * Return whether we are associated with an AP.
-   *
-   * \return true if we are associated with an AP, false otherwise
-   */
-  bool IsAssociated (void) const;
   /**
    * Return whether we are waiting for an association response from an AP.
    *

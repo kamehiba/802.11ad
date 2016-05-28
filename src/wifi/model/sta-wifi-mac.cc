@@ -342,6 +342,14 @@ StaWifiMac::RestartBeaconWatchdog (Time delay)
 }
 
 bool
+StaWifiMac::IsAssociatedPublic(void)
+{
+    NS_LOG_FUNCTION (this);
+    bool temp = IsAssociated();
+    return temp;
+}
+
+bool
 StaWifiMac::IsAssociated (void) const
 {
   return m_state == ASSOCIATED;
