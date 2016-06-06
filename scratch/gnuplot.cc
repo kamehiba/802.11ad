@@ -66,14 +66,26 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 
 void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset DataSet);
-bool isAssociated(Ptr<Node> node);
+void isAssociated(Ptr<Node> node);
+void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface);
+void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface,
+				Ptr<LteHelper> lteHelper, NetDeviceContainer staDevs);
+
+bool m_isAssociated			= true;
+bool m_linkUP				= true;
+double tempVar 				= 0.0;
+bool startWApp				= true;
+bool enableLteEpsBearer		= true;
+uint32_t nStations 			= 1;	// Stations
+
+ApplicationContainer appSourceWifi, appSinkWifi;
+ApplicationContainer appSourceLTE, appSinkLTE;
 
 int main (int argc, char *argv[])
 {
 	double simulationTime				= 11;
-	double appStartTime					= 0.01;
+	//double appStartTime					= 0.01;
 
-	bool enableLteEpsBearer				= true;
 	bool flowmonitor					= true;
 	bool verbose						= false; // packetSink dataFlow
 	bool showConf						= false;
@@ -98,9 +110,9 @@ int main (int argc, char *argv[])
 
 	//APP Vars
 	std::string dataRate 				= "1Mb/s";
-    std::string protocol 				= "ns3::UdpSocketFactory";
+    //std::string protocol 				= "ns3::UdpSocketFactory";
 	uint32_t packetSize					= 1472;
-	uint32_t appPort					= 9;
+	//uint32_t appPort					= 9;
 
 	//IPs
 	Ipv4Address ipRemoteHost			= "1.0.0.0";
@@ -118,7 +130,7 @@ int main (int argc, char *argv[])
 	//Nodes Vars
 	double staSpeed						= 3.0; 	// m/s.
 	uint32_t nAcpoints 					= 1; 	// Access Points
-	uint32_t nStations 					= 1;	// Stations
+
 
 	std::string outFileName				= "debug";
 
@@ -171,7 +183,7 @@ int main (int argc, char *argv[])
 
 	NS_ASSERT (nAcpoints > 0 && nStations > 0);
 	NS_ASSERT (nFemtocells > 0);
-	NS_ASSERT (appStartTime < simulationTime);
+	//NS_ASSERT (appStartTime < simulationTime);
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Area");
@@ -241,7 +253,7 @@ int main (int argc, char *argv[])
 	//wifi.SetRemoteStationManager ("ns3::IdealWifiManager", "BerThreshold",DoubleValue(1e-6));
 	//wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode",StringValue ("OfdmRate7Gbps"), "ControlMode",StringValue ("OfdmRate2Gbps"));
 
-	wifiMac.SetType ("ns3::FlywaysWifiMac");
+	//wifiMac.SetType ("ns3::FlywaysWifiMac");
 
 	////video trasmission
 	wifiMac.SetBlockAckThresholdForAc(AC_VI, 2);
@@ -521,54 +533,18 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	if(isAssociated(wifiStaNode.Get(0)))
+//	Ptr<MobilityModel> model1 = wifiApNode.Get(0)->GetObject<MobilityModel>();
+//	Ptr<MobilityModel> model2 = wifiStaNode.Get(0)->GetObject<MobilityModel>();
+//	double distance = model1->GetDistanceFrom (model2);
+//	std::cout << "distance: " << distance;
+
+    if(startWApp)
 	{
-		NS_LOG_UNCOND ("Initializing apps WIFI");
-
-		for (uint32_t i = 0; i < nStations; i++)
-		{
-			ApplicationContainer appSourceWifi, appSinkWifi;
-			OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
-			appSourceWifi = onOffHelperWifi.Install (remoteHost);
-			appSourceWifi.Start (Seconds (appStartTime));
-
-			PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-			appSinkWifi = sink.Install (wifiStaNode.Get(i));
-			appSinkWifi.Start (Seconds (appStartTime));
-
-			//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
-		}
+		startAppWifi(wifiStaNode,remoteHost, wifiStaInterface);
 	}
 	else
 	{
-		NS_LOG_UNCOND ("Initializing apps LTE");
-
-		for (uint32_t i = 0; i < nStations; i++)
-		{
-			ApplicationContainer appSourceLTE, appSinkLTE;
-			OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(i), appPort)));
-			appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
-			appSourceLTE.Start (Seconds (appStartTime));
-
-			PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-			appSinkLTE = sinkLTE.Install (wifiStaNode.Get(i));
-			appSinkLTE.Start (Seconds (appStartTime));
-
-			if(enableLteEpsBearer)
-			{
-				EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
-				Ptr<EpcTft> tft = Create<EpcTft> ();
-
-				NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
-				EpcTft::PacketFilter dlpf;
-				dlpf.localPortStart = appPort;
-				dlpf.localPortEnd = appPort;
-				tft->Add (dlpf);
-				lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(i), bearer, tft);
-			}
-
-			//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
-		}
+		startAppLTE(wifiStaNode, remoteHostLTE,	ueIpIface, lteHelper, staDevs);
 	}
 
 /////////////////////////////////////////////////////
@@ -713,22 +689,101 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 		x = (double) Simulator::Now().GetSeconds();
-		y = (double) txOffered;
-		//y = throughput;
+
+		if(t.sourceAddress == "1.0.0.1")
+		{
+			if(throughput != tempVar)
+			{
+				startWApp = true;
+
+				appSourceWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
+				appSinkWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
+
+				appSourceLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+				appSinkLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+			}
+			else
+			{
+				startWApp = false;
+
+				appSourceWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+				appSinkWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+
+				appSourceLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
+				appSinkLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
+			}
+
+			tempVar = throughput;
+		}
+
+		if(t.sourceAddress == "1.0.0.1")
+			y = (double) txOffered;
+		else
+			y = throughput;
+
 		dataSet.Add(x,y);
 	}
 
-	Simulator::Schedule(Seconds(1),&flowmonitorOutput, flowMon, fmhelper, dataSet);
+	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
 }
 
-bool isAssociated(Ptr<Node> node)
+void isAssociated(Ptr<Node> node)
 {
 	//Ptr<Node> node = wifiStaNode.Get(0);
 	Ptr<NetDevice> dev = node->GetDevice(0);
 	Ptr<WifiNetDevice> wifi_dev = DynamicCast<WifiNetDevice>(dev);
 	Ptr<WifiMac> mac = wifi_dev->GetMac();
 	Ptr<StaWifiMac> statMac = mac->GetObject<StaWifiMac>();
-	bool isAssociated = statMac->IsAssociatedPublic();
+	m_isAssociated = statMac->IsAssociatedPublic();
 
-	return isAssociated;
+	//m_isAssociated = dev->GetObject<WifiNetDevice>()->GetMac()->GetObject<StaWifiMac>()->IsAssociatedPublic();
+
+	Simulator::Schedule(Seconds(1), &isAssociated, node);
 }
+
+void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface)
+{
+	for (uint32_t i = 0; i < nStations; i++)
+	{
+		NS_LOG_UNCOND ("Initializing apps WIFI on node " << i);
+
+		OnOffHelper onOffHelperWifi ("ns3::UdpSocketFactory", Address (InetSocketAddress (wifiStaInterface.GetAddress(i), 9)));
+		appSourceWifi = onOffHelperWifi.Install (remoteHost);
+
+		PacketSinkHelper sink ("ns3::UdpSocketFactory",Address (InetSocketAddress (Ipv4Address::GetAny (), 9)));
+		appSinkWifi = sink.Install (wifiStaNode.Get(i));
+
+		//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
+	}
+}
+
+void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE,
+				Ipv4InterfaceContainer ueIpIface, Ptr<LteHelper> lteHelper, NetDeviceContainer staDevs)
+{
+	for (uint32_t i = 0; i < nStations; i++)
+	{
+		NS_LOG_UNCOND ("Initializing apps LTE on node " << i);
+
+		OnOffHelper onOffHelperLTE ("ns3::UdpSocketFactory", Address (InetSocketAddress (ueIpIface.GetAddress(i), 9)));
+		appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
+
+		PacketSinkHelper sinkLTE ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny (), 9)));
+		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(i));
+
+		if(enableLteEpsBearer)
+		{
+			EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
+			Ptr<EpcTft> tft = Create<EpcTft> ();
+
+			NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
+			EpcTft::PacketFilter dlpf;
+			dlpf.localPortStart = 9;
+			dlpf.localPortEnd = 9;
+			tft->Add (dlpf);
+			lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(i), bearer, tft);
+		}
+
+		//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
+	}
+}
+

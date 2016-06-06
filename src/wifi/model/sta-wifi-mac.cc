@@ -346,7 +346,14 @@ StaWifiMac::IsAssociatedPublic(void)
 {
     NS_LOG_FUNCTION (this);
     bool temp = IsAssociated();
-    return temp;
+    //bool temp = false;;
+   // if(m_linkUp)
+    //	temp = true;
+
+    if(temp)
+    	return true;
+
+    return false;
 }
 
 bool
