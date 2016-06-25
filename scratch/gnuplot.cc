@@ -65,11 +65,11 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 #define color(param) printf("\033[%sm",param)
 
 //======================================================================================
-void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface, Ptr<LteHelper> lteHelper, NetDeviceContainer staDevs);
-void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset DataSet);
-void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface);
-void isAssociated(Ptr<Node> node);
+void startAppLTE(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer);
+void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
+void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset);
+void startAppWifi(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer);
+void isAssociated(Ptr<Node>);
 //======================================================================================
 
 std::string outFileName				= "debug";
@@ -127,6 +127,7 @@ uint32_t maxAmsduSize				= 999999;//262143;
 
 //Nodes Vars
 double staSpeed						= 3.0; 	// m/s.
+uint32_t nEnbNodes					= 1;	// Enb Nodes LTE
 uint32_t nStations 					= 1;	// Stations
 uint32_t nAcpoints 					= 1; 	// Access Points
 
@@ -417,7 +418,7 @@ int main (int argc, char *argv[])
 //////////////////////////////////////////////
 
 	NodeContainer enbNodes;
-	enbNodes.Create(1);
+	enbNodes.Create(nEnbNodes);
 
 	Ptr<PointToPointEpcHelper>  epcHelper = CreateObject<PointToPointEpcHelper> ();
 	Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
@@ -588,7 +589,7 @@ int main (int argc, char *argv[])
 	}
 
 	if(showConf)
-		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nEnbNodes, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 
 	if(flowmonitor)
 	{
@@ -624,7 +625,7 @@ int main (int argc, char *argv[])
 	else
 	{
 		Simulator::Run ();
-		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nEnbNodes, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 	}
 
 	std::cout << "========================= " << "\n";
@@ -640,14 +641,15 @@ int main (int argc, char *argv[])
 	return 0;
 }
 
-void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
+void showConfigs(uint32_t nEnbNodes, uint32_t nAcpoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
 				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
 {
 	std::cout << std::endl;
 	std::cout << "==========CONFIGS======== " << "\n";
-	std::cout << "eNB: " << nEnb << "\n";
-	std::cout << "UE: " << nUe << "\n";
-	std::cout << "UE Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
+	std::cout << "ENb: " << nEnbNodes << "\n";
+	std::cout << "Access Points: " << nAcpoints << "\n";
+	std::cout << "Stations: " << nStations << "\n";
+	std::cout << "Statation Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
