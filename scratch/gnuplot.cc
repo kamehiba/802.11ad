@@ -211,8 +211,8 @@ int main (int argc, char *argv[])
 
 ///////////////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Wifi Nodes");
-	NS_LOG_UNCOND ("Access Points: " < nAcpoints);
-	NS_LOG_UNCOND ("Stations: " < nStations);
+	NS_LOG_UNCOND ("Access Points: " << nAcpoints);
+	NS_LOG_UNCOND ("Stations: " << nStations);
 ///////////////////////////////////////////////////////////
 
 	remoteHostContainer.Create (1);
@@ -440,7 +440,7 @@ int main (int argc, char *argv[])
 	pgw = epcHelper->GetPgwNode ();
 
 ////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Creating ENb nodes: " < nEnbNodes);
+	NS_LOG_UNCOND ("==> Creating ENb nodes: " << nEnbNodes);
 ////////////////////////////////////////////////
 
 	enbNodes.Create(nEnbNodes);
@@ -706,7 +706,7 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
 		Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
 		Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-		double enbDistance = apNode->GetDistanceFrom (enbNode);
+		double enbDistance = enbNode->GetDistanceFrom (staNode);
 		double apDistance = apNode->GetDistanceFrom (staNode);
 
 		std::cout << "========================= " << "\n";
@@ -722,8 +722,8 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
 		std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-		std::cout << "	Enb Distance: " 	<< enbDistance 						<< "\n";
-		std::cout << "	AP Distance: " 		<< apDistance 						<< "\n";
+		std::cout << "  Enb Distance: " 	<< enbDistance 						<< "\n";
+		std::cout << "  AP Distance: " 		<< apDistance 						<< "\n";
 		std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
 		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
@@ -746,6 +746,13 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 void initApps(Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface, Ptr<Node> remoteHostLTE,
 			  Ipv4InterfaceContainer ueIpIface, NetDeviceContainer staDevs)
 {
+//	Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
+//	Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
+//	Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
+//	double enbDistance = enbNode->GetDistanceFrom (staNode);
+//	double apDistance = apNode->GetDistanceFrom (staNode);
+
+
 	if(m_isAssociated)
 		startAppWifi(remoteHost, wifiStaInterface);
 	else
