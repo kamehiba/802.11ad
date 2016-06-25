@@ -118,25 +118,23 @@ bool use2DAntenna					= true;
 uint32_t wifiChannelNumber			= 1;
 uint32_t nTxAntennas 				= 1;
 uint32_t nRxAntennas				= 1;
-uint32_t maxAmsduSize				= 999999;//262143;
+uint32_t maxAmsduSize				= 999999; //262143;
 
 //APP Vars
-std::string dataRate 				= "7Gb/s";
-std::string protocol 				= "ns3::UdpSocketFactory";
 uint32_t packetSize					= 1472;
 uint32_t appPort					= 9;
+std::string protocol 				= "ns3::UdpSocketFactory";
+std::string dataRate 				= "7Mb/s";
 
 //Nodes Vars
+bool useRamdonPlacedNodes			= false;
 double staSpeed						= 3.0; 	// m/s.
 uint32_t nEnbNodes					= 1;	// Enb Nodes LTE
 uint32_t nStations 					= 1;	// Stations
 uint32_t nAcpoints 					= 1; 	// Access Points
 
 ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
-NodeContainer remoteHostContainer;
-NodeContainer routerContainer;
-NodeContainer wifiApNode;
-NodeContainer wifiStaNode;
+NodeContainer remoteHostContainer, routerContainer, wifiApNode, wifiStaNode, enbNodes;
 Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
 
 int main (int argc, char *argv[])
@@ -191,7 +189,7 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Checking Variables");
 ///////////////////////////////////////////////
 
-	NS_ASSERT (nAcpoints > 0 && nStations > 0);
+	NS_ASSERT (nAcpoints > 0 && nStations > 0 && nEnbNodes > 0);
 	NS_ASSERT (nFemtocells > 0);
 	//NS_ASSERT (appStartTime < simulationTime);
 
@@ -212,7 +210,9 @@ int main (int argc, char *argv[])
 	}
 
 ///////////////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Creating Nodes");
+	NS_LOG_UNCOND ("==> Creating Wifi Nodes");
+	NS_LOG_UNCOND ("Access Points: " < nAcpoints);
+	NS_LOG_UNCOND ("Stations: " < nStations);
 ///////////////////////////////////////////////////////////
 
 	remoteHostContainer.Create (1);
@@ -353,64 +353,78 @@ int main (int argc, char *argv[])
 	routermobility.Install(routerContainer);
 	BuildingsHelper::Install (routerContainer);
 
-	NS_LOG_UNCOND ("Installing mobility on wifiApNode");
-	MobilityHelper apMobility;
-	Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
-	apPositionAlloc = CreateObject<ListPositionAllocator> ();
-	apPositionAlloc->Add (Vector (0.0, 5.0, 0.0));
-	apMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-	apMobility.SetPositionAllocator(apPositionAlloc);
-	apMobility.Install(wifiApNode);
-	BuildingsHelper::Install (wifiApNode);
+	if(useRamdonPlacedNodes)
+	{
+		NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
+		MobilityHelper apMobility;
+		Ptr<PositionAllocator> apPositionAlloc;
+		apPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
+		Ptr<UniformRandomVariable> xVal = CreateObject<UniformRandomVariable> ();
+		xVal->SetAttribute ("Min", DoubleValue (boxArea.xMin));
+		xVal->SetAttribute ("Max", DoubleValue (boxArea.xMax));
+		apPositionAlloc->SetAttribute ("X", PointerValue (xVal));
+		Ptr<UniformRandomVariable> yVal = CreateObject<UniformRandomVariable> ();
+		yVal->SetAttribute ("Min", DoubleValue (boxArea.yMin));
+		yVal->SetAttribute ("Max", DoubleValue (boxArea.yMax));
+		apPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
+		Ptr<UniformRandomVariable> zVal = CreateObject<UniformRandomVariable> ();
+		zVal->SetAttribute ("Min", DoubleValue (boxArea.zMin));
+		zVal->SetAttribute ("Max", DoubleValue (boxArea.zMax));
+		apPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
+		apMobility.SetPositionAllocator (apPositionAlloc);
+		apMobility.Install (wifiApNode);
+		BuildingsHelper::Install (wifiApNode);
 
-//	NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
-//	MobilityHelper apMobility;
-//	Ptr<PositionAllocator> apPositionAlloc;
-//	apPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	Ptr<UniformRandomVariable> xVal = CreateObject<UniformRandomVariable> ();
-//	xVal->SetAttribute ("Min", DoubleValue (boxArea.xMin));
-//	xVal->SetAttribute ("Max", DoubleValue (boxArea.xMax));
-//	apPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-//	Ptr<UniformRandomVariable> yVal = CreateObject<UniformRandomVariable> ();
-//	yVal->SetAttribute ("Min", DoubleValue (boxArea.yMin));
-//	yVal->SetAttribute ("Max", DoubleValue (boxArea.yMax));
-//	apPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-//	Ptr<UniformRandomVariable> zVal = CreateObject<UniformRandomVariable> ();
-//	zVal->SetAttribute ("Min", DoubleValue (boxArea.zMin));
-//	zVal->SetAttribute ("Max", DoubleValue (boxArea.zMax));
-//	apPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-//	apMobility.SetPositionAllocator (apPositionAlloc);
-//	apMobility.Install (wifiApNode);
-//	BuildingsHelper::Install (wifiApNode);
+		NS_LOG_UNCOND ("Randomly allocating wifiStaNode inside the boxArea");
+		MobilityHelper stamobility;
+		stamobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinX", 		DoubleValue (boxArea.xMin));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxX", 		DoubleValue (boxArea.xMax));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinY", 		DoubleValue (boxArea.yMin));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxY", 		DoubleValue (boxArea.yMax));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::Z", 			DoubleValue (0.0));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxSpeed", 	DoubleValue (staSpeed));
+		Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (staSpeed));
+		Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
+		ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
+		stamobility.SetPositionAllocator (ueRandomPositionAlloc);
+		stamobility.Install (wifiStaNode);
+		for (NodeContainer::Iterator it = wifiStaNode.Begin (); it != wifiStaNode.End (); ++it)
+		(*it)->Initialize ();
+		BuildingsHelper::Install (wifiStaNode);
+	}
+	else
+	{
+		NS_LOG_UNCOND ("Installing mobility on wifiApNode");
+		MobilityHelper apMobility;
+		Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
+		apPositionAlloc = CreateObject<ListPositionAllocator> ();
 
-    NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
-    MobilityHelper stamobility;
-    stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
-    stamobility.Install (wifiStaNode);
-    for (uint32_t i = 0; i < nStations; i++)
-    {
-		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (-10.0+i, 10.0, 0.0));
-		wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
-    }
-    BuildingsHelper::Install (wifiStaNode);
+		double apX=0.0;
+		for(uint32_t i=0; i<wifiApNode.GetN();i++)
+		{
+			apPositionAlloc->Add (Vector (apX, 5.0, 0.0));
+			apX+=-20;
+		}
 
-//	NS_LOG_UNCOND ("Randomly allocating wifiStaNode inside the boxArea");
-//	MobilityHelper stamobility;
-//	stamobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinX", 		DoubleValue (boxArea.xMin));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxX", 		DoubleValue (boxArea.xMax));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinY", 		DoubleValue (boxArea.yMin));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxY", 		DoubleValue (boxArea.yMax));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::Z", 			DoubleValue (0.0));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxSpeed", 	DoubleValue (staSpeed));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (staSpeed));
-//	Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
-//	ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	stamobility.SetPositionAllocator (ueRandomPositionAlloc);
-//	stamobility.Install (wifiStaNode);
-//	for (NodeContainer::Iterator it = wifiStaNode.Begin (); it != wifiStaNode.End (); ++it)
-//	  (*it)->Initialize ();
-//	BuildingsHelper::Install (wifiStaNode);
+		apMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+		apMobility.SetPositionAllocator(apPositionAlloc);
+		apMobility.Install(wifiApNode);
+		BuildingsHelper::Install (wifiApNode);
+
+	    NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
+	    MobilityHelper stamobility;
+	    stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
+	    stamobility.Install (wifiStaNode);
+
+	    for (uint32_t i = 0; i < nStations; i++)
+	    {
+			wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (-15.0+i, 10.0, 0.0));
+			wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
+	    }
+
+	    BuildingsHelper::Install (wifiStaNode);
+	}
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -418,20 +432,22 @@ int main (int argc, char *argv[])
 ///////////////////////////////////////////////
 //////////////////////////////////////////////
 
-	NodeContainer enbNodes;
-	enbNodes.Create(nEnbNodes);
-
 	Ptr<PointToPointEpcHelper>  epcHelper = CreateObject<PointToPointEpcHelper> ();
-//	Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
 	Ptr<Node> 	pgw;
 
 	//lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::BuildingsObstaclePropagationLossModel"));
 	lteHelper->SetEpcHelper (epcHelper);
 	pgw = epcHelper->GetPgwNode ();
 
-	////////////////////////////////////////////////
-	NS_LOG_UNCOND ("==> Create  RemoteHost LTE");
-	////////////////////////////////////////////////
+////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Creating ENb nodes: " < nEnbNodes);
+////////////////////////////////////////////////
+
+	enbNodes.Create(nEnbNodes);
+
+////////////////////////////////////////////////
+	NS_LOG_UNCOND ("==> Creating  RemoteHost LTE");
+////////////////////////////////////////////////
 
 	NodeContainer remoteHostNodeLte;
 	remoteHostNodeLte.Create (1);
@@ -474,35 +490,47 @@ int main (int argc, char *argv[])
 	pgwmobility.Install(pgw);
 	BuildingsHelper::Install (pgw);
 
-	NS_LOG_UNCOND ("Installing mobility on enbNodes");
-	MobilityHelper enbMobility;
-	Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-	enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-	enbPositionAlloc->Add (Vector (20.0, 5.0, 0.0));
-	enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-	enbMobility.SetPositionAllocator(enbPositionAlloc);
-	enbMobility.Install(enbNodes);
-	BuildingsHelper::Install (enbNodes);
+	if(useRamdonPlacedNodes)
+	{
+		NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea LTE");
+		MobilityHelper enbMobility;
+		Ptr<PositionAllocator> enbPositionAlloc;
+		enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
+		Ptr<UniformRandomVariable> xVal1 = CreateObject<UniformRandomVariable> ();
+		xVal1->SetAttribute ("Min", DoubleValue (boxArea.xMin));
+		xVal1->SetAttribute ("Max", DoubleValue (boxArea.xMax));
+		enbPositionAlloc->SetAttribute ("X", PointerValue (xVal1));
+		Ptr<UniformRandomVariable> yVal1 = CreateObject<UniformRandomVariable> ();
+		yVal1->SetAttribute ("Min", DoubleValue (boxArea.yMin));
+		yVal1->SetAttribute ("Max", DoubleValue (boxArea.yMax));
+		enbPositionAlloc->SetAttribute ("Y", PointerValue (yVal1));
+		Ptr<UniformRandomVariable> zVal1 = CreateObject<UniformRandomVariable> ();
+		zVal1->SetAttribute ("Min", DoubleValue (boxArea.zMin));
+		zVal1->SetAttribute ("Max", DoubleValue (boxArea.zMax));
+		enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal1));
+		enbMobility.SetPositionAllocator (enbPositionAlloc);
+		enbMobility.Install (enbNodes);
+		BuildingsHelper::Install (enbNodes);
+	}
+	else
+	{
+		NS_LOG_UNCOND ("Installing mobility on enbNodes");
+		MobilityHelper enbMobility;
+		Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
+		enbPositionAlloc = CreateObject<ListPositionAllocator> ();
 
-//	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea LTE");
-//	MobilityHelper enbMobility;
-//	Ptr<PositionAllocator> enbPositionAlloc;
-//	enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	Ptr<UniformRandomVariable> xVal1 = CreateObject<UniformRandomVariable> ();
-//	xVal1->SetAttribute ("Min", DoubleValue (boxArea.xMin));
-//	xVal1->SetAttribute ("Max", DoubleValue (boxArea.xMax));
-//	enbPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-//	Ptr<UniformRandomVariable> yVal1 = CreateObject<UniformRandomVariable> ();
-//	yVal1->SetAttribute ("Min", DoubleValue (boxArea.yMin));
-//	yVal1->SetAttribute ("Max", DoubleValue (boxArea.yMax));
-//	enbPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-//	Ptr<UniformRandomVariable> zVal1 = CreateObject<UniformRandomVariable> ();
-//	zVal1->SetAttribute ("Min", DoubleValue (boxArea.zMin));
-//	zVal1->SetAttribute ("Max", DoubleValue (boxArea.zMax));
-//	enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-//	enbMobility.SetPositionAllocator (enbPositionAlloc);
-//	enbMobility.Install (enbNodes);
-//	BuildingsHelper::Install (enbNodes);
+		double enbX=0.0;
+		for(uint32_t i=0;i<enbNodes.GetN();i++)
+		{
+			enbX+=20.0;
+			enbPositionAlloc->Add (Vector (enbX, 5.0, 0.0));
+		}
+
+		enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+		enbMobility.SetPositionAllocator(enbPositionAlloc);
+		enbMobility.Install(enbNodes);
+		BuildingsHelper::Install (enbNodes);
+	}
 
 ////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Installing  Devices to the nodes LTE");
@@ -675,24 +703,31 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			throughput = 0;
 		}
 
+		Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
+		Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
+		Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
+		double enbDistance = apNode->GetDistanceFrom (enbNode);
+		double apDistance = apNode->GetDistanceFrom (staNode);
+
 		std::cout << "========================= " << "\n";
 		color("31");
 		std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
 		color("0");
-		std::cout << "  Tx Packets: " << i->second.txPackets 	<< "\n";
-		std::cout << "  Tx Bytes:   " << i->second.txBytes 		<< "\n";
-		std::cout << "  Tx bitrate: " << txbitrate_value 		<< " Mbps\n";
-		std::cout << "  TxOffered:  " << txOffered 				<< " Mbps\n\n";
+		std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+		std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+		std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+		std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
 
-		std::cout << "  Rx Packets: " << i->second.rxPackets 	<< "\n";
-		std::cout << "  Rx Bytes:   " << i->second.rxBytes 		<< "\n";
-		std::cout << "  Rx bitrate: " << rxbitrate_value 		<< " Mbps\n\n";
+		std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+		std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+		std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-		std::cout << "  Throughput: " << throughput 			<< " Mbps\n\n";
-
+		std::cout << "	Enb Distance: " 	<< enbDistance 						<< "\n";
+		std::cout << "	AP Distance: " 		<< apDistance 						<< "\n";
 		std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
 		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+		std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 		x = (double) Simulator::Now().GetSeconds();
@@ -732,7 +767,7 @@ void isAssociated(Ptr<Node> node)
 	m_isAssociated = statMac->IsAssociatedPublic();
 	////m_isAssociated = dev->GetObject<WifiNetDevice>()->GetMac()->GetObject<StaWifiMac>()->IsAssociatedPublic();
 
-	//Simulator::Schedule(Seconds(1), &isAssociated, node);
+	Simulator::Schedule(Seconds(1), &isAssociated, node);
 }
 
 void startAppWifi(Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface)
@@ -749,7 +784,6 @@ void startAppWifi(Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface)
 
 		appSourceWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
 		appSinkWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
-
 		appSourceLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
 		appSinkLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
 
@@ -784,7 +818,6 @@ void startAppLTE(Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface, NetD
 
 		appSourceWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
 		appSinkWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-
 		appSourceLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
 		appSinkLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
 
