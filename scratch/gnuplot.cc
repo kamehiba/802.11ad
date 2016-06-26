@@ -65,7 +65,7 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 #define color(param) printf("\033[%sm",param)
 
 //======================================================================================
-void showConfigs(uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
+void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset);
 void startAppWifi(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,double);
 void startAppLTE(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,double);
@@ -75,16 +75,15 @@ void calcDistance(NodeContainer,NodeContainer,NodeContainer);
 double simulationTime				= 20;
 double appStartTime					= 0.01;
 
-bool enableLteEpsBearer				= false;
-bool flowmonitor					= true;
-bool verbose						= false; // packetSink dataFlow
-bool showConf						= false;
-bool netAnim						= false;
-bool tracing						= false;
-
-//Other Vars
+//Others Vars
 double staDistanceAp				= 0.0;
 double staDistanceEnb				= 0.0;
+bool enableLteEpsBearer				= false;
+bool flowmonitor					= false;
+bool verbose						= false; // packetSink dataFlow
+bool showConf						= true;
+bool netAnim						= false;
+bool tracing						= false;
 
 //P2P Vars
 uint32_t mtu						= 1500; // p2p Mtu
@@ -92,9 +91,9 @@ uint32_t p2pLinkDelay				= 0.010;// p2p link Delay
 
 //Area Vars
 double BoxXmin						= 0;
-double BoxXmax						= 15;
+double BoxXmax						= 25;
 double BoxYmin						= 0;
-double BoxYmax						= 15;
+double BoxYmax						= 25;
 
 //Femtocells Vars
 bool useFemtocells					= true;
@@ -591,62 +590,63 @@ int main (int argc, char *argv[])
 		//anim.SetConstantPosition (ueNode, 0.0, 0.0);
 	}
 
-	if(showConf)
-		showConfigs(nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+	std::string fileNameWithNoExtension = "gnuplot";
+	std::string graphicsFileName        = fileNameWithNoExtension + ".png";
+	std::string plotFileName            = fileNameWithNoExtension + ".plt";
+	std::string plotTitle               = "Flow vs Throughput";
+	std::string dataTitle               = "Throughput (Mbps)";
 
-		std::string fileNameWithNoExtension = "gnuplot";
-		std::string graphicsFileName        = fileNameWithNoExtension + ".png";
-		std::string plotFileName            = fileNameWithNoExtension + ".plt";
-		std::string plotTitle               = "Flow vs Throughput";
-		std::string dataTitle               = "Throughput (Mbps)";
+	Gnuplot gnuplot (graphicsFileName);
+	gnuplot.SetTitle (plotTitle);
 
-		Gnuplot gnuplot (graphicsFileName);
-		gnuplot.SetTitle (plotTitle);
+	gnuplot.SetTerminal ("png");
+	gnuplot.SetLegend ("Flow (secs)", "Throughput (Mbps)");
 
-		gnuplot.SetTerminal ("png");
-		gnuplot.SetLegend ("Flow (secs)", "Throughput (Mbps)");
+	Gnuplot2dDataset dataset;
+	dataset.SetTitle (dataTitle);
+	dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
 
-		Gnuplot2dDataset dataset;
-		dataset.SetTitle (dataTitle);
-		dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
+	FlowMonitorHelper fmHelper;
+	Ptr<FlowMonitor> allMon = fmHelper.InstallAll();
+	allMon->CheckForLostPackets ();
+	allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
+	flowmonitorOutput(allMon, &fmHelper, dataset);
 
-		FlowMonitorHelper fmHelper;
-		Ptr<FlowMonitor> allMon = fmHelper.InstallAll();
-		allMon->CheckForLostPackets ();
-		allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
-		flowmonitorOutput(allMon, &fmHelper, dataset);
+	Simulator::Run ();
 
-		Simulator::Run ();
+	gnuplot.AddDataset (dataset);
+	std::ofstream plotFile (plotFileName.c_str());
+	gnuplot.GenerateOutput (plotFile);
+	plotFile.close ();
 
-		gnuplot.AddDataset (dataset);
-		std::ofstream plotFile (plotFileName.c_str());
-		gnuplot.GenerateOutput (plotFile);
-		plotFile.close ();
-
-	std::cout << "========================= " << "\n";
+	std::cout << std::endl;
+	std::cout << "==========TIMES========== " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
 
 	Simulator::Destroy ();
 
 	time_t tempoFinal 	= time(NULL);
 	double tempoTotal 	= difftime(tempoFinal, tempoInicio);
-	std::cout << "Real time: " << tempoTotal << " secs  ~ " << (uint32_t)tempoTotal / 60 << " min\n";
-	std::cout << "========================= " << "\n\n";
+	std::cout << "Real time: " << tempoTotal << " secs ~ " << (uint32_t)tempoTotal / 60 << " min\n";
+
+	if(showConf)
+		showConfigs(nEnb, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 
 	return 0;
 }
 
-void showConfigs(uint32_t nEnb, uint32_t nUe, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
+void showConfigs(uint32_t nEnb,uint32_t nAcpoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
 				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
 {
-	std::cout << std::endl;
 	std::cout << "==========CONFIGS======== " << "\n";
-	std::cout << "eNB: " << nEnb << "\n";
-	std::cout << "UE: " << nUe << "\n";
-	std::cout << "UE Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
+	std::cout << "Access points: " << nAcpoints << "\n";
+	std::cout << "Stations: " << nStations << "\n";
+	std::cout << "Enb: " << nEnb << "\n";
+	std::cout << "Station Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
 	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
 	std::cout << "DataRate: " << dataRate << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
+	std::cout << "========================= " << "\n";
 }
 
 void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet)
@@ -682,53 +682,56 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			throughput = 0;
 		}
 
-		if (i->first == 1 && t.sourceAddress == "1.0.0.1" && staDistanceAp <= 12)
+		if(flowmonitor)
 		{
-			color("31");
-			std::cout << "===========WIFI============== " << "\n";
-			std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
-			color("0");
-			std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
-			std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
-			std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
-			std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+			if (i->first == 1 && t.sourceAddress == "1.0.0.1" && staDistanceAp <= 12)
+			{
+				color("31");
+				std::cout << "===========WIFI================= " << "\n";
+				std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
+				color("0");
+				std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+				std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+				std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+				std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
 
-			std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
-			std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
-			std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+				std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+				std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+				std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-			std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
-			std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
-			std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
-			std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+				std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+				std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+				std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+				std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-			std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-			std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
-			std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
-		}
-		else if(i->first > 1 )
-		{
-			color("31");
-			std::cout << "===========LTE============== " << "\n";
-			std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
-			color("0");
-			std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
-			std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
-			std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
-			std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+				std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+				std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+				std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+			}
+			else if(i->first > 1 )
+			{
+				color("31");
+				std::cout << "===========LTE================= " << "\n";
+				std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
+				color("0");
+				std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+				std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+				std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+				std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
 
-			std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
-			std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
-			std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+				std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+				std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+				std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-			std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
-			std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
-			std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
-			std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+				std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+				std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+				std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+				std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-			std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-			std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
-			std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+				std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+				std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+				std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+			}
 		}
 
 		x = (double) Simulator::Now().GetSeconds();
