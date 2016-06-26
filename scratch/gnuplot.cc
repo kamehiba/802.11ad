@@ -72,14 +72,14 @@ void startAppLTE(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,Ptr<LteHelper>,N
 void calcDistance(NodeContainer,NodeContainer,NodeContainer);
 //======================================================================================
 
-double simulationTime				= 20;
+double simulationTime				= 21;
 double appStartTime					= 0.01;
 
 //Others Vars
 double staDistanceAp				= 0.0;
 double staDistanceEnb				= 0.0;
+bool flowmonitor					= true;
 bool enableLteEpsBearer				= false;
-bool flowmonitor					= false;
 bool verbose						= false; // packetSink dataFlow
 bool showConf						= true;
 bool netAnim						= false;
@@ -118,7 +118,7 @@ uint32_t maxAmsduSize				= 999999;//262143;
 uint32_t packetSize					= 1472;
 uint32_t appPort					= 9;
 std::string protocol 				= "ns3::UdpSocketFactory";
-std::string dataRate 				= "1Mb/s";
+std::string dataRate 				= "7Gb/s";
 
 //Nodes Vars
 double staSpeed						= 2.0; 	// m/s.
@@ -148,9 +148,9 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Setting Up Configs");
 ///////////////////////////////////////////////
 
-	/* No fragmentation and no RTS/CTS */
-	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", 	StringValue ("2200"));
-	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", 			StringValue ("2200"));
+	/* Global params: no fragmentation, no RTS/CTS, fixed rate for all packets */
+	Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("999999"));
+	Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("999999"));
 
 	Config::SetDefault ("ns3::OnOffApplication::DataRate", 		DataRateValue(DataRate(dataRate)));
     Config::SetDefault ("ns3::OnOffApplication::PacketSize", 	UintegerValue (packetSize));
@@ -261,8 +261,7 @@ int main (int argc, char *argv[])
 	wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
 	wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
-	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
+	wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (60e3));
 
 	wifiPhy.SetChannel (wifiChannel.Create ());
 	wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
@@ -622,6 +621,7 @@ int main (int argc, char *argv[])
 	std::cout << std::endl;
 	std::cout << "==========TIMES========== " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
+	std::cout << "GNU Plot time: " << simulationTime << " secs\n";
 
 	Simulator::Destroy ();
 
@@ -656,92 +656,95 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier ());
 	FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats ();
 
-	for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
+	if((double) Simulator::Now().GetSeconds() < simulationTime)
 	{
-		calcDistance(wifiApNode,wifiStaNode,enbNodes);
-
-		Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
-
-		difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
-		diffrx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstRxPacket.GetSeconds();
-		diffrxtx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
-
-		txbitrate_value = (double) i->second.txBytes * 8 / difftx / 1024 / 1024;
-		txOffered = (double) i->second.txBytes * 8.0 / difftx / 1024 / 1024;
-
-		if (i->second.rxPackets != 0)
+		for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 		{
-			rxbitrate_value = (double) i->second.rxBytes * 8 / diffrx / 1024 / 1024;
-			delay_value = (double) i->second.delaySum.GetSeconds() / (double) i->second.rxPackets;
-			throughput = (double) i->second.rxBytes * 8.0 / diffrxtx / 1024 / 1024;
-		}
-		else
-		{
-			rxbitrate_value = 0;
-			delay_value = 0;
-			throughput = 0;
-		}
+			calcDistance(wifiApNode,wifiStaNode,enbNodes);
 
-		if(flowmonitor)
-		{
-			if (i->first == 1 && t.sourceAddress == "1.0.0.1" && staDistanceAp <= 12)
+			Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
+
+			difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
+			diffrx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstRxPacket.GetSeconds();
+			diffrxtx = i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
+
+			txbitrate_value = (double) i->second.txBytes * 8 / difftx / 1024 / 1024;
+			txOffered = (double) i->second.txBytes * 8.0 / difftx / 1024 / 1024;
+
+			if (i->second.rxPackets != 0)
 			{
-				color("31");
-				std::cout << "===========WIFI================= " << "\n";
-				std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
-				color("0");
-				std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
-				std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
-				std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
-				std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
-
-				std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
-				std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
-				std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
-
-				std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
-				std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
-				std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
-				std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
-
-				std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-				std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
-				std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+				rxbitrate_value = (double) i->second.rxBytes * 8 / diffrx / 1024 / 1024;
+				delay_value = (double) i->second.delaySum.GetSeconds() / (double) i->second.rxPackets;
+				throughput = (double) i->second.rxBytes * 8.0 / diffrxtx / 1024 / 1024;
 			}
-			else if(i->first > 1 )
+			else
 			{
-				color("31");
-				std::cout << "===========LTE================= " << "\n";
-				std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
-				color("0");
-				std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
-				std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
-				std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
-				std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
-
-				std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
-				std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
-				std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
-
-				std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
-				std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
-				std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
-				std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
-
-				std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-				std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
-				std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+				rxbitrate_value = 0;
+				delay_value = 0;
+				throughput = 0;
 			}
+
+			if(flowmonitor)
+			{
+				if (i->first < 2 && t.sourceAddress == "1.0.0.1" && staDistanceAp <= 12)
+				{
+					color("31");
+					std::cout << "===========WIFI================= " << "\n";
+					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << " secs\n";
+					color("0");
+					std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+					std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+					std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+					std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+
+					std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+					std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+					std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+
+					std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+					std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+
+					std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+					std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+				}
+				else
+				{
+					color("31");
+					std::cout << "===========LTE================= " << "\n";
+					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << " secs\n";
+					color("0");
+					std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+					std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+					std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+					std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+
+					std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+					std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+					std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+
+					std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+					std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+
+					std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+					std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+				}
+			}
+
+			x = (double) Simulator::Now().GetSeconds();
+
+			if(t.sourceAddress == "1.0.0.1" && staDistanceAp <= 13)
+				y = (double) txOffered;
+			else
+				y = throughput;
+
+			dataSet.Add(x,y);
 		}
-
-		x = (double) Simulator::Now().GetSeconds();
-
-		if(t.sourceAddress == "1.0.0.1" && staDistanceAp <= 13)
-			y = (double) txOffered;
-		else
-			y = throughput;
-
-		dataSet.Add(x,y);
 	}
 
 	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
@@ -753,7 +756,7 @@ void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4Interface
 
 	for (uint32_t i = 0; i < nStations; i++)
 	{
-		NS_LOG_UNCOND ("Initializing apps WIFI on node " << i<<nStations);
+		NS_LOG_UNCOND ("Initializing apps WIFI on node " << i);
 		OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
 		appSourceWifi = onOffHelperWifi.Install (remoteHost);
 		PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
@@ -802,7 +805,6 @@ void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4Interfa
 
 	appSourceLTE.Stop(Seconds (simulationTime));
 	appSinkLTE.Stop(Seconds (simulationTime));
-
 }
 
 void calcDistance(NodeContainer wifiApNode, NodeContainer wifiStaNode, NodeContainer enbNodes)
