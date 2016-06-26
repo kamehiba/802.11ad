@@ -72,7 +72,7 @@ void startAppLTE(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,Ptr<LteHelper>,N
 void calcDistance(NodeContainer,NodeContainer,NodeContainer);
 //======================================================================================
 
-double simulationTime				= 11;
+double simulationTime				= 20;
 double appStartTime					= 0.01;
 
 bool enableLteEpsBearer				= false;
@@ -334,7 +334,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobility;
 	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
 	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc->Add (Vector (0.0, -5.0, 0.0));
+	rhPositionAlloc->Add (Vector (0.0, -40.0, 0.0));
 	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobility.SetPositionAllocator(rhPositionAlloc);
 	rhmobility.Install(remoteHostContainer);
@@ -344,7 +344,7 @@ int main (int argc, char *argv[])
 	MobilityHelper routermobility;
 	Ptr<ListPositionAllocator> routerPositionAlloc = CreateObject<ListPositionAllocator> ();
 	routerPositionAlloc = CreateObject<ListPositionAllocator> ();
-	routerPositionAlloc->Add (Vector (0.0, 0.0, 0.0));
+	routerPositionAlloc->Add (Vector (0.0, -20.0, 0.0));
 	routermobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	routermobility.SetPositionAllocator(routerPositionAlloc);
 	routermobility.Install(routerContainer);
@@ -354,7 +354,12 @@ int main (int argc, char *argv[])
 	MobilityHelper apMobility;
 	Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
 	apPositionAlloc = CreateObject<ListPositionAllocator> ();
-	apPositionAlloc->Add (Vector (0.0, 5.0, 0.0));
+	double apX=0.0;
+	for(uint32_t i=0; i<wifiApNode.GetN();i++)
+	{
+		apPositionAlloc->Add (Vector (apX, 5.0, 0.0));
+		apX+=-20;
+	}
 	apMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	apMobility.SetPositionAllocator(apPositionAlloc);
 	apMobility.Install(wifiApNode);
@@ -384,9 +389,10 @@ int main (int argc, char *argv[])
     MobilityHelper stamobility;
     stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
     stamobility.Install (wifiStaNode);
+    double staX = -10.0 * nAcpoints;
     for (uint32_t i = 0; i < nStations; i++)
     {
-		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (-10.0+i, 10.0, 0.0));
+		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (staX+i, 10.0, 0.0));
 		wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
     }
     BuildingsHelper::Install (wifiStaNode);
@@ -454,7 +460,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobilityLTE;
 	Ptr<ListPositionAllocator> rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
 	rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
-	rhPositionAllocLTE->Add (Vector (20.0, -5.0, 0.0));
+	rhPositionAllocLTE->Add (Vector (40.0, -40.0, 0.0));
 	rhmobilityLTE.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobilityLTE.SetPositionAllocator(rhPositionAllocLTE);
 	rhmobilityLTE.Install(remoteHostNodeLte);
@@ -464,7 +470,7 @@ int main (int argc, char *argv[])
 	MobilityHelper pgwmobility;
 	Ptr<ListPositionAllocator> pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
 	pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
-	pgwPositionAlloc->Add (Vector (20.0, 0.0, 0.0));
+	pgwPositionAlloc->Add (Vector (40.0, -20.0, 0.0));
 	pgwmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	pgwmobility.SetPositionAllocator(pgwPositionAlloc);
 	pgwmobility.Install(pgw);
@@ -474,7 +480,12 @@ int main (int argc, char *argv[])
 	MobilityHelper enbMobility;
 	Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
 	enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-	enbPositionAlloc->Add (Vector (20.0, 5.0, 0.0));
+	double enbX=40.0;
+	for(uint32_t i=0;i<enbNodes.GetN();i++)
+	{
+		enbPositionAlloc->Add (Vector (enbX, 5.0, 0.0));
+		enbX+=20.0;
+	}
 	enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	enbMobility.SetPositionAllocator(enbPositionAlloc);
 	enbMobility.Install(enbNodes);
@@ -537,7 +548,7 @@ int main (int argc, char *argv[])
 	//Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode,remoteHost, wifiStaInterface);
 	//Simulator::Schedule(Seconds(10), &startAppLTE, wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
 
-	double startLteApp=7.0;
+	double startLteApp=8.0;
 
 	startAppWifi(wifiStaNode,remoteHost, wifiStaInterface,startLteApp);
 	startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs,startLteApp);
@@ -671,31 +682,58 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			throughput = 0;
 		}
 
-		std::cout << "========================= " << "\n";
-		color("31");
-		std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
-		color("0");
-		std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
-		std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
-		std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
-		std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+		if (i->first == 1 && t.sourceAddress == "1.0.0.1" && staDistanceAp <= 12)
+		{
+			color("31");
+			std::cout << "===========WIFI============== " << "\n";
+			std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
+			color("0");
+			std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+			std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+			std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+			std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
 
-		std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
-		std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
-		std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+			std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+			std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+			std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-		std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
-		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
-		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
-		std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+			std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+			std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+			std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+			std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-		std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-		std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
-		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+			std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+			std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+			std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+		}
+		else if(i->first > 1 )
+		{
+			color("31");
+			std::cout << "===========LTE============== " << "\n";
+			std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << (double) Simulator::Now().GetSeconds() << "\n";
+			color("0");
+			std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
+			std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
+			std::cout << "  Tx bitrate: " 		<< txbitrate_value 					<< " Mbps\n";
+			std::cout << "  TxOffered:  " 		<< txOffered 						<< " Mbps\n\n";
+
+			std::cout << "  Rx Packets: " 		<< i->second.rxPackets 				<< "\n";
+			std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
+			std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
+
+			std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
+			std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
+			std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
+			std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+
+			std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+			std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+			std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
+		}
 
 		x = (double) Simulator::Now().GetSeconds();
 
-		if(t.sourceAddress == "1.0.0.1")
+		if(t.sourceAddress == "1.0.0.1" && staDistanceAp <= 13)
 			y = (double) txOffered;
 		else
 			y = throughput;
@@ -721,8 +759,8 @@ void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4Interface
 		//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
 	}
 
-	appSourceWifi.Start (Seconds (0.1));
-	appSinkWifi.Start (Seconds (0.1));
+	appSourceWifi.Start (Seconds (appStartTime));
+	appSinkWifi.Start (Seconds (appStartTime));
 
 	appSourceWifi.Stop (Seconds (startLteApp));
 	appSinkWifi.Stop (Seconds (startLteApp));
@@ -759,8 +797,8 @@ void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4Interfa
 	appSourceLTE.Start(Seconds (startLteApp));
 	appSinkLTE.Start(Seconds (startLteApp));
 
-	//appSourceLTE.Stop(Seconds (simulationTime));
-	//appSinkLTE.Stop(Seconds (simulationTime));
+	appSourceLTE.Stop(Seconds (simulationTime));
+	appSinkLTE.Stop(Seconds (simulationTime));
 
 }
 
