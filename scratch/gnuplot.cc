@@ -67,10 +67,9 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 //======================================================================================
 void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset);
-void startAppWifi(Ptr<Node>,Ipv4InterfaceContainer);
-void startAppLTE(Ptr<Node>,Ipv4InterfaceContainer,NetDeviceContainer);
 void initApps(Ptr<Node>,Ipv4InterfaceContainer,Ptr<Node>,Ipv4InterfaceContainer,NetDeviceContainer);
 void isAssociated(Ptr<Node>);
+void calcDistance(NodeContainer,NodeContainer);
 //======================================================================================
 
 std::string outFileName				= "debug";
@@ -80,9 +79,6 @@ double simulationTime				= 11;
 
 bool m_isAssociated					= true;
 bool m_linkUP						= true;
-
-double tempVar 						= 0.0;
-bool startWifiApp					= true;
 bool enableLteEpsBearer				= false;
 
 bool flowmonitor					= true;
@@ -90,6 +86,10 @@ bool verbose						= false; // packetSink dataFlow
 bool showConf						= false;
 bool netAnim						= false;
 bool tracing						= false;
+
+double staDistanceAp				= 0.0;
+double staDistanceEnb				= 0.0;
+double tempVar 						= 0.0;
 
 //P2P Vars
 uint32_t mtu						= 1500; // p2p Mtu
@@ -133,7 +133,7 @@ uint32_t nEnbNodes					= 1;	// Enb Nodes LTE
 uint32_t nStations 					= 1;	// Stations
 uint32_t nAcpoints 					= 1; 	// Access Points
 
-ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
+//ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
 NodeContainer remoteHostContainer, routerContainer, wifiApNode, wifiStaNode, enbNodes;
 Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
 
@@ -412,6 +412,7 @@ int main (int argc, char *argv[])
 		apMobility.Install(wifiApNode);
 		BuildingsHelper::Install (wifiApNode);
 
+
 	    NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
 	    MobilityHelper stamobility;
 	    stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
@@ -419,7 +420,7 @@ int main (int argc, char *argv[])
 
 	    for (uint32_t i = 0; i < nStations; i++)
 	    {
-			wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (-15.0+i, 10.0, 0.0));
+			wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (-20.0+i, 10.0, 0.0));
 			wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
 	    }
 
@@ -566,34 +567,8 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	initApps(remoteHost, wifiStaInterface, remoteHostLTE, ueIpIface, staDevs),
-
-//	Ptr<MobilityModel> model1 = wifiApNode.Get(0)->GetObject<MobilityModel>();
-//	Ptr<MobilityModel> model2 = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-//	double distance = model1->GetDistanceFrom (model2);
-//	std::cout << "distance: " << distance;
-
-
-//	Simulator::Schedule(Seconds(1), &isAssociated, wifiStaNode.Get(0));
-//
-//    if(m_isAssociated)
-//	{
-//		startAppWifi(wifiStaNode,remoteHost, wifiStaInterface);
-//	}
-//	else
-//	{
-//		startAppLTE(wifiStaNode, remoteHostLTE,	ueIpIface, lteHelper, staDevs);
-//	}
-
-
-//    if(startWifiApp)
-//	{
-//		startAppWifi(wifiStaNode,remoteHost, wifiStaInterface);
-//	}
-//	else
-//	{
-//		startAppLTE(wifiStaNode, remoteHostLTE,	ueIpIface, lteHelper, staDevs);
-//	}
+	//Simulator::Schedule(Seconds(1), &calcDistance, wifiApNode, wifiStaNode);
+	//initApps(remoteHost, wifiStaInterface, remoteHostLTE, ueIpIface, staDevs),
 
 /////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -622,42 +597,35 @@ int main (int argc, char *argv[])
 	if(showConf)
 		showConfigs(nEnbNodes, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 
-	if(flowmonitor)
-	{
-		std::string fileNameWithNoExtension = "gnuplot";
-		std::string graphicsFileName        = fileNameWithNoExtension + ".png";
-		std::string plotFileName            = fileNameWithNoExtension + ".plt";
-		std::string plotTitle               = "Flow vs Throughput";
-		std::string dataTitle               = "Throughput (Mbps)";
+	std::string fileNameWithNoExtension = "gnuplot";
+	std::string graphicsFileName        = fileNameWithNoExtension + ".png";
+	std::string plotFileName            = fileNameWithNoExtension + ".plt";
+	std::string plotTitle               = "Flow vs Throughput";
+	std::string dataTitle               = "Throughput (Mbps)";
 
-		Gnuplot gnuplot (graphicsFileName);
-		gnuplot.SetTitle (plotTitle);
+	Gnuplot gnuplot (graphicsFileName);
+	gnuplot.SetTitle (plotTitle);
 
-		gnuplot.SetTerminal ("png");
-		gnuplot.SetLegend ("Flow (secs)", "Throughput (Mbps)");
+	gnuplot.SetTerminal ("png");
+	gnuplot.SetLegend ("Flow (secs)", "Throughput (Mbps)");
 
-		Gnuplot2dDataset dataset;
-		dataset.SetTitle (dataTitle);
-		dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
+	Gnuplot2dDataset dataset;
+	dataset.SetTitle (dataTitle);
+	dataset.SetStyle (Gnuplot2dDataset::LINES_POINTS);
 
-		FlowMonitorHelper fmHelper;
-		Ptr<FlowMonitor> allMon = fmHelper.InstallAll();
-		allMon->CheckForLostPackets ();
-		allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
-		flowmonitorOutput(allMon, &fmHelper, dataset);
+	FlowMonitorHelper fmHelper;
+	Ptr<FlowMonitor> allMon = fmHelper.InstallAll();
+	allMon->CheckForLostPackets ();
+	allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
+	initApps(remoteHost, wifiStaInterface, remoteHostLTE, ueIpIface, staDevs),
+	//flowmonitorOutput(allMon, &fmHelper, dataset);
 
-		Simulator::Run ();
+	Simulator::Run ();
 
-		gnuplot.AddDataset (dataset);
-		std::ofstream plotFile (plotFileName.c_str());
-		gnuplot.GenerateOutput (plotFile);
-		plotFile.close ();
-	}
-	else
-	{
-		Simulator::Run ();
-		showConfigs(nEnbNodes, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
-	}
+	gnuplot.AddDataset (dataset);
+	std::ofstream plotFile (plotFileName.c_str());
+	gnuplot.GenerateOutput (plotFile);
+	plotFile.close ();
 
 	std::cout << "========================= " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
@@ -703,11 +671,7 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			throughput = 0;
 		}
 
-		Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
-		Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
-		Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-		double enbDistance = enbNode->GetDistanceFrom (staNode);
-		double apDistance = apNode->GetDistanceFrom (staNode);
+		calcDistance(wifiApNode,wifiStaNode);
 
 		std::cout << "========================= " << "\n";
 		color("31");
@@ -722,12 +686,13 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		std::cout << "  Rx Bytes:   " 		<< i->second.rxBytes 				<< "\n";
 		std::cout << "  Rx bitrate: " 		<< rxbitrate_value 					<< " Mbps\n\n";
 
-		std::cout << "  Enb Distance: " 	<< enbDistance 						<< "\n";
-		std::cout << "  AP Distance: " 		<< apDistance 						<< "\n";
 		std::cout << "  Lost Packets: " 	<< i->second.lostPackets 			<< "\n";
 		std::cout << "  Dropped Packets: " 	<< i->second.packetsDropped.size() 	<< "\n";
 		std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 		std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
+
+		std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+		std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
 		std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 		x = (double) Simulator::Now().GetSeconds();
@@ -740,25 +705,76 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		dataSet.Add(x,y);
 	}
 
-	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
+	//Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
 }
 
 void initApps(Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface, Ptr<Node> remoteHostLTE,
 			  Ipv4InterfaceContainer ueIpIface, NetDeviceContainer staDevs)
 {
-//	Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
-//	Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
-//	Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-//	double enbDistance = enbNode->GetDistanceFrom (staNode);
-//	double apDistance = apNode->GetDistanceFrom (staNode);
+	ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
 
+	calcDistance(wifiApNode,wifiStaNode);
 
-	if(m_isAssociated)
-		startAppWifi(remoteHost, wifiStaInterface);
+	std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
+	std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
+
+	if(staDistanceAp <= 13.0)
+	{
+		std::cout << "Starting wifi app: \n";
+		for (uint32_t i = 0; i < nStations; i++)
+		{
+			NS_LOG_UNCOND ("Initializing apps WIFI on node " << i);
+
+			double timeNow =  (double) Simulator::Now().GetSeconds();
+
+			OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
+			appSourceWifi = onOffHelperWifi.Install (remoteHost);
+
+			PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+			appSinkWifi = sink.Install (wifiStaNode.Get(i));
+
+			appSourceWifi.Start (Seconds (timeNow));
+			appSinkWifi.Start (Seconds (timeNow));
+			appSourceLTE.Stop(Seconds (timeNow));
+			appSinkLTE.Stop(Seconds (timeNow));
+		}
+	}
 	else
-		startAppLTE(remoteHostLTE, ueIpIface, staDevs);
+	{
+		std::cout << "Starting LTE app: \n";
+		for (uint32_t i = 0; i < nStations; i++)
+		{
+			NS_LOG_UNCOND ("Initializing apps LTE on node " << i);
 
-	isAssociated(wifiStaNode.Get(0));
+			double timeNow =  (double) Simulator::Now().GetSeconds();
+
+			OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(i), appPort)));
+			appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
+
+			PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+			appSinkLTE = sinkLTE.Install (wifiStaNode.Get(i));
+
+			if(enableLteEpsBearer)
+			{
+				EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
+				Ptr<EpcTft> tft = Create<EpcTft> ();
+
+				NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
+				EpcTft::PacketFilter dlpf;
+				dlpf.localPortStart = appPort;
+				dlpf.localPortEnd = appPort;
+				tft->Add (dlpf);
+				lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(i), bearer, tft);
+			}
+
+			appSourceWifi.Stop(Seconds (timeNow));
+			appSinkWifi.Stop(Seconds (timeNow));
+			appSourceLTE.Start(Seconds (timeNow));
+			appSinkLTE.Start(Seconds (timeNow));
+		}
+	}
+
+	//isAssociated(wifiStaNode.Get(0));
 
 	Simulator::Schedule(Seconds(1), &initApps, remoteHost, wifiStaInterface, remoteHostLTE, ueIpIface, staDevs);
 }
@@ -777,61 +793,6 @@ void isAssociated(Ptr<Node> node)
 	Simulator::Schedule(Seconds(1), &isAssociated, node);
 }
 
-void startAppWifi(Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface)
-{
-	for (uint32_t i = 0; i < nStations; i++)
-	{
-		NS_LOG_UNCOND ("Initializing apps WIFI on node " << i);
-
-		OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
-		appSourceWifi = onOffHelperWifi.Install (remoteHost);
-
-		PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-		appSinkWifi = sink.Install (wifiStaNode.Get(i));
-
-		appSourceWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
-		appSinkWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
-		appSourceLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-		appSinkLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-
-		//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
-	}
-}
-
-void startAppLTE(Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface, NetDeviceContainer staDevs)
-{
-	for (uint32_t i = 0; i < nStations; i++)
-	{
-		NS_LOG_UNCOND ("Initializing apps LTE on node " << i);
-
-		OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(i), appPort)));
-		appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
-
-		PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(i));
-
-		if(enableLteEpsBearer)
-		{
-			EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO);
-			Ptr<EpcTft> tft = Create<EpcTft> ();
-
-			NS_LOG_UNCOND ("==> Activating DL Dedicated EpsBearer " );
-			EpcTft::PacketFilter dlpf;
-			dlpf.localPortStart = appPort;
-			dlpf.localPortEnd = appPort;
-			tft->Add (dlpf);
-			lteHelper->ActivateDedicatedEpsBearer (staDevs.Get(i), bearer, tft);
-		}
-
-		appSourceWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-		appSinkWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-		appSourceLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
-		appSinkLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
-
-		//Ipv4GlobalRoutingHelper::RecomputeRoutingTables();
-	}
-}
-
 void showConfigs(uint32_t nEnbNodes, uint32_t nAcpoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
 				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
 {
@@ -845,3 +806,16 @@ void showConfigs(uint32_t nEnbNodes, uint32_t nAcpoints, uint32_t nStations, dou
 	std::cout << "DataRate: " << dataRate << "\n";
 	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
 }
+
+void calcDistance(NodeContainer wifiApNode, NodeContainer wifiStaNode)
+{
+	Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
+	Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
+	Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
+
+	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
+	staDistanceAp = staNode->GetDistanceFrom (apNode);
+}
+
+
+
