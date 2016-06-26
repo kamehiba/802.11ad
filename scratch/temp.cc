@@ -131,8 +131,8 @@ std::string dataRate 				= "7Mb/s";
 bool useRamdonPlacedNodes			= false;
 double staSpeed						= 3.0; 	// m/s.
 uint32_t nEnbNodes					= 1;	// Enb Nodes LTE
+uint32_t nAcpoints 					= 2; 	// Access Points
 uint32_t nStations 					= 1;	// Stations
-uint32_t nAcpoints 					= 1; 	// Access Points
 
 Ptr<Node> remoteHostWifi, remoteHostLTE;
 Ipv4InterfaceContainer wifiStaInterface, lteInterface;

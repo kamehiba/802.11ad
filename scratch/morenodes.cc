@@ -63,21 +63,21 @@ void flowmonitorOutput(Ptr<FlowMonitor>, FlowMonitorHelper*,Gnuplot2dDataset Dat
 void isAssociated(Ptr<Node> node);
 void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface);
 void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface, Ptr<LteHelper> lteHelper, NetDeviceContainer staDevs);
-void ConnectAP(NetDeviceContainer remoteHostDevice, NetDeviceContainer routerDevice, NetDeviceContainer wifiAPDevice, NetDeviceContainer wifiStaDevice, NodeContainer wifiApNode);
-void ConnectAP1(NetDeviceContainer remoteHostDevice, NetDeviceContainer routerDevice, NetDeviceContainer wifiAPDevice, NetDeviceContainer wifiStaDevice, NodeContainer wifiApNode);
+//void ConnectAP(NetDeviceContainer remoteHostDevice, NetDeviceContainer routerDevice, NetDeviceContainer wifiAPDevice, NetDeviceContainer wifiStaDevice, NodeContainer wifiApNode);
+//void ConnectAP1(NetDeviceContainer remoteHostDevice, NetDeviceContainer routerDevice, NetDeviceContainer wifiAPDevice, NetDeviceContainer wifiStaDevice, NodeContainer wifiApNode);
 
 //////////////////////////////////////////////////////////////////
 
 std::string outFileName 	= "debug";
 
 bool m_isAssociated 		= true;
-bool m_linkUP 			= true;
+bool m_linkUP 				= true;
 double tempVar 				= 0.0;
 bool startWApp 				= true;
 
-bool enableLteEpsBearer 	= true;
+bool enableLteEpsBearer 	= false;
 double staSpeed 			= 6.0; // m/s.
-uint32_t nAcpoints 			= 5; // Access Points
+uint32_t nAcpoints 			= 1; // Access Points
 uint32_t nStations 			= 1; // Stations
 
 double simulationTime 		= 11;
@@ -291,10 +291,7 @@ NS_LOG_UNCOND ("==> Checking Variables");
 	}
 
 	for (uint32_t i = 0; i < wifiApNode.GetN (); ++i)
-	routerDevice.push_back(p2ph.Install (wifiApNode.Get(i), router));
-	//routerDevice=p2ph.Install (wifiApNode.Get(0), router);
-	//p2ph.Install (wifiApNode.Get(2), router);
-	//routerDevice1=p2ph.Install (wifiApNode.Get(1), router);
+		routerDevice.push_back(p2ph.Install (wifiApNode.Get(i), router));
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -307,12 +304,9 @@ NS_LOG_UNCOND ("==> Assigning IP to WIFI Devices");
 	internet.Install(wifiApNode);
 	internet.Install(wifiStaNode);
 
-	//ConnectAP(remoteHostDevice, routerDevice, wifiAPDevice, wifiStaDevice, wifiApNode);
 	ipv4.SetBase (ipRemoteHost, netMask);
 	remoteHostInterface = ipv4.Assign (remoteHostDevice);
 	ipv4.SetBase (ipRouter, netMask);
-	//for (uint32_t i = 0; i < routerDevice.GetN (); ++i)
-	//std::cout<<"DEVICE NO"<<routerDevice.Get(0)<<std::endl;
 	ipv4.Assign (routerDevice[0]);
 	ipv4.SetBase (ipWifi, netMask);
 	ipv4.Assign (wifiAPDevice);
@@ -531,7 +525,7 @@ NS_LOG_UNCOND ("==> Installing Devices to the nodes LTE");
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-NS_LOG_UNCOND ("==> Initializing Applications");//
+	NS_LOG_UNCOND ("==> Initializing Applications");//
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
@@ -540,31 +534,30 @@ NS_LOG_UNCOND ("==> Initializing Applications");//
 	// double distance = model1->GetDistanceFrom (model2);
 	// std::cout << "distance: " << distance;
 
-	if(startWApp)
-	{
-		startAppWifi(wifiStaNode,remoteHost, wifiStaInterface);
-		//Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode, remoteHost, wifiStaInterface);
-	}
-	else
-	{
-		startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
+	//if(startWApp)
+	//{
+		Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode,remoteHost, wifiStaInterface);
+	//}
+	//else
+	//{
+		Simulator::Schedule(Seconds(10), &startAppLTE, wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
+		//startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
 		lteHelper->AddX2Interface (enbNodes);
 
-		// X2-based Handover
-		double t=5.0;
-		for(uint32_t i=0;i<enbNodes.GetN();i++)
-		{
+	  // X2-based Handover
+	  double t=5.0;
+	  for(uint32_t i=0;i<enbNodes.GetN();i++)
+	  {
 		  if(i+1!=enbNodes.GetN())
 		  {
-			  for(uint32_t j=0;j<wifiStaNode.GetN();j++)
-				  lteHelper->HandoverRequest (Seconds (t), staDevs.Get (j), enbDevs.Get (i), enbDevs.Get (i+1));
+		  for(uint32_t j=0;j<wifiStaNode.GetN();j++)
+			  lteHelper->HandoverRequest (Seconds (t), staDevs.Get (j), enbDevs.Get (i), enbDevs.Get (i+1));
 		  }
 
-		  t+=3.0;
-		}
-
+	  	  t+=3.0;
+	  }
 	  //lteHelper->AttachToClosestEnb(staDevs, enbDevs);
-	}
+	//}
 
 	/////////////////////////////////////////////////////
 	std::cout << std::endl;
@@ -702,19 +695,19 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			{
 				std::cout<<"===> STARTING"<<std::endl;
 				startWApp = true;
-				appSourceWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
-				appSinkWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
-				appSourceLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-				appSinkLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSourceWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSinkWifi.Start (Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSourceLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSinkLTE.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
 			}
 			else
 			{
 				std::cout<<"===> STOPPING"<<std::endl;
 				startWApp = false;
-				appSourceWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-				appSinkWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
-				appSourceLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
-				appSinkLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSourceWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSinkWifi.Stop(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSourceLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
+//				appSinkLTE.Start(Seconds ((double) Simulator::Now().GetSeconds()));
 			}
 
 			tempVar = throughput;
