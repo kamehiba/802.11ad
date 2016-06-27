@@ -127,7 +127,7 @@ double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0; 	// m/s.
 
 uint32_t nEnb	 					= 1; 	// Enb
-uint32_t nApoints 					= 3; 	// Access Points
+uint32_t nApoints 					= 2; 	// Access Points
 uint32_t nStations 					= 1;	// Stations
 
 std::string outFileName				= "debug";
@@ -187,6 +187,7 @@ int main (int argc, char *argv[])
 ///////////////////////////////////////////////
 
 	NS_ASSERT (nApoints > 0 && nStations > 0);
+	NS_ASSERT (nApoints < 4);
 	NS_ASSERT (nFemtocells > 0);
 	NS_ASSERT (appStartTime < simulationTime);
 
@@ -507,11 +508,9 @@ int main (int argc, char *argv[])
 	if(nApoints==1)
 		startLteApp=8.0;
 	else if(nApoints==2)
-		startLteApp=20.0;
+		startLteApp=17.0;
 	else if(nApoints==3)
 		startLteApp=28.0;
-	else
-		NS_ASSERT (simulationTime > startLteApp);
 
 	//to use LTE simulation time has to be higher than startLteApp
 	NS_ASSERT (simulationTime > startLteApp);
@@ -703,8 +702,8 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
 }
 
-void startAppWifi(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi, Ipv4InterfaceContainer wifiStaInterface,
-					double startLteApp)
+void startAppWifi(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
+				Ipv4InterfaceContainer wifiStaInterface, double startLteApp)
 {
 	ApplicationContainer appSourceWifi, appSinkWifi;
 
@@ -757,9 +756,6 @@ void startAppWifi(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWi
 			appSourceWifi.Stop (Seconds (startLteApp));
 			appSinkWifi.Stop (Seconds (startLteApp));
 		}
-
-
-
 }
 
 void startAppLTE(NodeContainer wifiStaNode, NodeContainer remoteHostContainerLte, Ipv4InterfaceContainer ueIpIface,
