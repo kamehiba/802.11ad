@@ -128,7 +128,7 @@ double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0; 	// m/s.
 
 uint32_t nEnb	 					= 1; 	// Enb
-uint32_t nApoints 					= 3; 	// Access Points
+uint32_t nApoints 					= 2; 	// Access Points
 uint32_t nStations 					= 1;	// Stations
 
 std::string outFileName				= "debug";
@@ -716,8 +716,8 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 	{
 		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(1), appStartTime, 10.0);
 		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 10.0, 17.0);
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), 17.0, 23.0);
-		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 23.0, simulationTime);
+		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), 17.0, 21.0);
+		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 21.0, simulationTime);
 		startLteEpsBearer(lteHelper, staDevs.Get(0));
 	}
 	else if(nApoints==3)
