@@ -77,7 +77,7 @@ bool startWApp 				= true;
 
 bool enableLteEpsBearer 	= false;
 double staSpeed 			= 6.0; // m/s.
-uint32_t nAcpoints 			= 1; // Access Points
+uint32_t nAcpoints 			= 5; // Access Points
 uint32_t nStations 			= 1; // Stations
 
 double simulationTime 		= 11;
@@ -252,8 +252,7 @@ NS_LOG_UNCOND ("==> Checking Variables");
 	wifiMac.SetMsduAggregatorForAc (AC_VI, "ns3::MsduStandardAggregator", "MaxAmsduSize", UintegerValue (maxAmsduSize));
 
 	wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Lambda", DoubleValue(3e8/60e9));
-	//wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (5e9));
+	wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (60e3));
 
 	wifiPhy.SetChannel (wifiChannel.Create ());
 	wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);

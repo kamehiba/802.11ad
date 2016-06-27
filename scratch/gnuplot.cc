@@ -118,9 +118,11 @@ uint32_t maxAmsduSize				= 999999;//262143;
 uint32_t packetSize					= 1472;
 uint32_t appPort					= 9;
 std::string protocol 				= "ns3::UdpSocketFactory";
-std::string dataRate 				= "7Gb/s";
+std::string dataRate 				= "1Mb/s";
 
 //Nodes Vars
+double wifiVerticalPosition			= 0.0;
+double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0; 	// m/s.
 uint32_t nEnb	 					= 1; 	// Enb
 uint32_t nAcpoints 					= 1; 	// Access Points
@@ -160,7 +162,6 @@ int main (int argc, char *argv[])
 	Config::SetDefault ("ns3::StaWifiMac::ProbeRequestTimeout", StringValue ("0.01"));
 	Config::SetDefault ("ns3::StaWifiMac::AssocRequestTimeout", StringValue ("0.01"));
 	Config::SetDefault ("ns3::StaWifiMac::MaxMissedBeacons", 	UintegerValue (1));
-
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Command Line Parameters");
@@ -332,7 +333,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobility;
 	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
 	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc->Add (Vector (0.0, -40.0, 0.0));
+	rhPositionAlloc->Add (Vector (wifiVerticalPosition, -40.0, 0.0));
 	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobility.SetPositionAllocator(rhPositionAlloc);
 	rhmobility.Install(remoteHostContainer);
@@ -342,7 +343,7 @@ int main (int argc, char *argv[])
 	MobilityHelper routermobility;
 	Ptr<ListPositionAllocator> routerPositionAlloc = CreateObject<ListPositionAllocator> ();
 	routerPositionAlloc = CreateObject<ListPositionAllocator> ();
-	routerPositionAlloc->Add (Vector (0.0, -20.0, 0.0));
+	routerPositionAlloc->Add (Vector (wifiVerticalPosition, -20.0, 0.0));
 	routermobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	routermobility.SetPositionAllocator(routerPositionAlloc);
 	routermobility.Install(routerContainer);
@@ -352,7 +353,7 @@ int main (int argc, char *argv[])
 	MobilityHelper apMobility;
 	Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
 	apPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double apX=0.0;
+	double apX=wifiVerticalPosition;
 	for(uint32_t i=0; i<wifiApNode.GetN();i++)
 	{
 		apPositionAlloc->Add (Vector (apX, 5.0, 0.0));
@@ -458,7 +459,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobilityLTE;
 	Ptr<ListPositionAllocator> rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
 	rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
-	rhPositionAllocLTE->Add (Vector (40.0, -40.0, 0.0));
+	rhPositionAllocLTE->Add (Vector (lteVerticalPosition, -40.0, 0.0));
 	rhmobilityLTE.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobilityLTE.SetPositionAllocator(rhPositionAllocLTE);
 	rhmobilityLTE.Install(remoteHostNodeLte);
@@ -468,7 +469,7 @@ int main (int argc, char *argv[])
 	MobilityHelper pgwmobility;
 	Ptr<ListPositionAllocator> pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
 	pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
-	pgwPositionAlloc->Add (Vector (40.0, -20.0, 0.0));
+	pgwPositionAlloc->Add (Vector (lteVerticalPosition, -20.0, 0.0));
 	pgwmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	pgwmobility.SetPositionAllocator(pgwPositionAlloc);
 	pgwmobility.Install(pgw);
@@ -478,10 +479,10 @@ int main (int argc, char *argv[])
 	MobilityHelper enbMobility;
 	Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
 	enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double enbX=40.0;
+	double enbX=lteVerticalPosition;
 	for(uint32_t i=0;i<enbNodes.GetN();i++)
 	{
-		enbPositionAlloc->Add (Vector (enbX, 5.0, 0.0));
+		enbPositionAlloc->Add (Vector (enbX, -10.0, 0.0));
 		enbX+=20.0;
 	}
 	enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -543,26 +544,23 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	//Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode,remoteHost, wifiStaInterface);
-	//Simulator::Schedule(Seconds(10), &startAppLTE, wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
-
 	double startLteApp=8.0;
-
-	startAppWifi(wifiStaNode,remoteHost, wifiStaInterface,startLteApp);
-	startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs,startLteApp);
-
-
 	lteHelper->AddX2Interface (enbNodes);
 
-	for(uint32_t i=0;i<enbNodes.GetN();i++)
+	startAppWifi(wifiStaNode,remoteHost, wifiStaInterface, startLteApp);
+	startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs, startLteApp);
+	//Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode,remoteHost, wifiStaInterface);
+	//Simulator::Schedule(Seconds(startLteApp), &startAppLTE, wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
+
+	for(uint32_t i=0; i < nEnb; i++)
 	{
-	  if(i+1!=enbNodes.GetN())
+	  if(i+1 != nEnb)
 	  {
-		  for(uint32_t j=0;j<wifiStaNode.GetN();j++)
+		  for(uint32_t j=0; j < nStations; j++)
 			  lteHelper->HandoverRequest (Seconds (startLteApp), staDevs.Get (j), enbDevs.Get (i), enbDevs.Get (i+1));
 	  }
 
-	  startLteApp+=3.0;
+	  startLteApp+=5.0;
 	}
 
 /////////////////////////////////////////////////////
