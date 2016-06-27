@@ -67,27 +67,27 @@ NS_LOG_COMPONENT_DEFINE ("debug");
 //======================================================================================
 void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset);
-void startAppWifi(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,double);
-void startAppLTE(NodeContainer,Ptr<Node>,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,double);
+void startAppWifi(NodeContainer,NodeContainer,Ipv4InterfaceContainer,double);
+void startAppLTE(NodeContainer,NodeContainer,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,double);
 void calcDistance(NodeContainer,NodeContainer,NodeContainer);
 //======================================================================================
 
-double simulationTime				= 21;
+double simulationTime				= 40.0;
 double appStartTime					= 0.01;
 
 //Others Vars
 double staDistanceAp				= 0.0;
 double staDistanceEnb				= 0.0;
 bool flowmonitor					= true;
-bool enableLteEpsBearer				= false;
-bool verbose						= false;// packetSink dataFlow
+bool enableLteEpsBearer				= true;
+bool verbose						= false;	// packetSink dataFlow
 bool showConf						= true;
 bool netAnim						= false;
 bool tracing						= false;
 
 //P2P Vars
-uint32_t mtu						= 1500; // p2p Mtu
-uint32_t p2pLinkDelay				= 0.010;// p2p link Delay
+uint32_t mtu						= 1500; 	// p2p Mtu
+uint32_t p2pLinkDelay				= 0.010;		// p2p link Delay
 
 //Area Vars
 double BoxXmin						= 0;
@@ -102,9 +102,10 @@ uint32_t nFloors					= 1;
 uint32_t nApartmentsX				= 1;
 
 //IPs
-Ipv4Address ipRemoteHost			= "1.0.0.0";
+Ipv4Address ipRemoteHostWifi		= "1.0.0.0";
 Ipv4Address ipRouter				= "2.0.0.0";
 Ipv4Address ipWifi					= "3.0.0.0";
+Ipv4Address ipRemoteHostLte			= "4.0.0.0";
 Ipv4Mask	netMask					= "255.0.0.0";
 
 //WIFI Vars
@@ -124,17 +125,14 @@ std::string dataRate 				= "1Mb/s";
 double wifiVerticalPosition			= 0.0;
 double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0; 	// m/s.
+
 uint32_t nEnb	 					= 1; 	// Enb
-uint32_t nAcpoints 					= 1; 	// Access Points
+uint32_t nApoints 					= 1; 	// Access Points
 uint32_t nStations 					= 1;	// Stations
 
 std::string outFileName				= "debug";
 
-NodeContainer remoteHostContainer;
-NodeContainer routerContainer;
-NodeContainer wifiApNode;
-NodeContainer wifiStaNode;
-NodeContainer enbNodes;
+NodeContainer remoteHostContainerWifi, routerContainerWifi, wifiApNode, wifiStaNode, enbNodes;
 
 int main (int argc, char *argv[])
 {
@@ -142,7 +140,7 @@ int main (int argc, char *argv[])
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
 	NetDeviceContainer 			remoteHostDevice, routerDevice, wifiAPDevice, wifiStaDevice, lteDevice;
-	Ipv4InterfaceContainer 		remoteHostInterface, routerInterface, wifiAPInterface, wifiStaInterface;
+	Ipv4InterfaceContainer 		wifiStaInterface;
 	Ptr<Ipv4StaticRouting> 		remoteHostStaticRouting;
 	Box 						boxArea;
 
@@ -174,8 +172,8 @@ int main (int argc, char *argv[])
 
 	CommandLine cmd;
 	cmd.AddValue("simulationTime", "Simulation Time: ", simulationTime);
-	cmd.AddValue("nEnb", "How many ENBs: ", nAcpoints);
-	cmd.AddValue("nUe", "How many UEs: ", nStations);
+	cmd.AddValue("nApoints", "How many ENBs: ", nApoints);
+	cmd.AddValue("nStations", "How many UEs: ", nStations);
 	cmd.AddValue("dataRate", "Data Rate: ", dataRate);
 	cmd.AddValue("packetSize", "Packet Size: ", packetSize);
 	cmd.AddValue("verbose", "Verbose: ", verbose);
@@ -188,7 +186,7 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Checking Variables");
 ///////////////////////////////////////////////
 
-	NS_ASSERT (nAcpoints > 0 && nStations > 0);
+	NS_ASSERT (nApoints > 0 && nStations > 0);
 	NS_ASSERT (nFemtocells > 0);
 	NS_ASSERT (appStartTime < simulationTime);
 
@@ -212,13 +210,9 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Creating Nodes");
 ///////////////////////////////////////////////////////////
 
-	remoteHostContainer.Create (1);
-	Ptr<Node> remoteHost = remoteHostContainer.Get (0);
-
-	routerContainer.Create (1);
-	Ptr<Node> router = routerContainer.Get (0);
-
-	wifiApNode.Create(nAcpoints);
+	remoteHostContainerWifi.Create (nApoints);
+	routerContainerWifi.Create (nApoints);
+	wifiApNode.Create(nApoints);
 	wifiStaNode.Create(nStations);
 
 //////////////////////////////////////////////////////
@@ -231,10 +225,13 @@ int main (int argc, char *argv[])
 	p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
 	p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (p2pLinkDelay)));
 	p2ph.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
-	remoteHostDevice = p2ph.Install (remoteHost, router);
+	p2ph.SetQueue("ns3::DropTailQueue","MaxPackets",StringValue("99999999"));
 
-	for (uint32_t i = 0; i < wifiApNode.GetN (); ++i)
-		routerDevice = p2ph.Install (wifiApNode.Get(i), router);
+	for (uint32_t i = 0; i < nApoints; ++i)
+	{
+		remoteHostDevice.Add (p2ph.Install (remoteHostContainerWifi.Get(i), routerContainerWifi.Get (i)));
+		routerDevice.Add (p2ph.Install (routerContainerWifi.Get(i), wifiApNode.Get (i)));
+	}
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
@@ -281,10 +278,14 @@ int main (int argc, char *argv[])
 	wifiPhy.Set ("ShortGuardEnabled", BooleanValue (false));// Set guard interval
 
 	wifiMac.SetType ("ns3::ApWifiMac","Ssid",SsidValue (ssid),"BeaconGeneration", BooleanValue (true),"BeaconInterval", TimeValue (Seconds (2.5)));
-	wifiAPDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiApNode));
+
+	for (uint32_t i = 0; i < nApoints; ++i)
+		wifiAPDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiApNode.Get(i)));
 
 	wifiMac.SetType ("ns3::StaWifiMac","Ssid", SsidValue (ssid),"ActiveProbing", BooleanValue (true));
-	wifiStaDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiStaNode));
+
+	for (uint32_t i = 0; i < nStations; ++i)
+		wifiStaDevice.Add (wifi.Install (wifiPhy, wifiMac, wifiStaNode.Get(i)));
 
 	if(use2DAntenna)
 	{
@@ -293,7 +294,7 @@ int main (int argc, char *argv[])
 		Ptr<Measured2DAntenna> m2DAntenna = CreateObject<Measured2DAntenna>();
 		m2DAntenna->SetMode(10);
 
-		for (uint32_t u = 0; u < nAcpoints; ++u)
+		for (uint32_t u = 0; u < nApoints; ++u)
 			wifiAPDevice.Get(u)->GetObject<WifiNetDevice>()->GetPhy()->AggregateObject(m2DAntenna);
 
 		for (uint32_t u = 0; u < nStations; ++u)
@@ -306,19 +307,20 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	internet.Install(remoteHostContainer);
-	internet.Install(routerContainer);
+	internet.Install(remoteHostContainerWifi);
+	internet.Install(routerContainerWifi);
 	internet.Install(wifiApNode);
 	internet.Install(wifiStaNode);
 
-	ipv4.SetBase (ipRemoteHost, netMask);
-	remoteHostInterface	= ipv4.Assign (remoteHostDevice);
+	ipv4.SetBase (ipRemoteHostWifi, netMask);
+	ipv4.Assign (remoteHostDevice);
 
 	ipv4.SetBase (ipRouter, netMask);
-	routerInterface	= ipv4.Assign (routerDevice);
+	ipv4.Assign (routerDevice);
 
 	ipv4.SetBase (ipWifi, netMask);
-	wifiAPInterface = ipv4.Assign (wifiAPDevice);
+	ipv4.Assign (wifiAPDevice);
+
 	wifiStaInterface = ipv4.Assign (wifiStaDevice);
 
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -333,21 +335,31 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobility;
 	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
 	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	rhPositionAlloc->Add (Vector (wifiVerticalPosition, -40.0, 0.0));
+	double rhX=wifiVerticalPosition;
+	for(uint32_t i=0; i<wifiApNode.GetN();i++)
+	{
+		rhPositionAlloc->Add (Vector (rhX, -40.0, 0.0));
+		rhX+=-20;
+	}
 	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobility.SetPositionAllocator(rhPositionAlloc);
-	rhmobility.Install(remoteHostContainer);
-	BuildingsHelper::Install (remoteHostContainer);
+	rhmobility.Install(remoteHostContainerWifi);
+	BuildingsHelper::Install (remoteHostContainerWifi);
 
 	NS_LOG_UNCOND ("Installing mobility on Router");
 	MobilityHelper routermobility;
 	Ptr<ListPositionAllocator> routerPositionAlloc = CreateObject<ListPositionAllocator> ();
 	routerPositionAlloc = CreateObject<ListPositionAllocator> ();
-	routerPositionAlloc->Add (Vector (wifiVerticalPosition, -20.0, 0.0));
+	double roX=wifiVerticalPosition;
+	for(uint32_t i=0; i<wifiApNode.GetN();i++)
+	{
+		routerPositionAlloc->Add (Vector (roX, -20.0, 0.0));
+		roX+=-20;
+	}
 	routermobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	routermobility.SetPositionAllocator(routerPositionAlloc);
-	routermobility.Install(routerContainer);
-	BuildingsHelper::Install (routerContainer);
+	routermobility.Install(routerContainerWifi);
+	BuildingsHelper::Install (routerContainerWifi);
 
 	NS_LOG_UNCOND ("Installing mobility on wifiApNode");
 	MobilityHelper apMobility;
@@ -364,55 +376,21 @@ int main (int argc, char *argv[])
 	apMobility.Install(wifiApNode);
 	BuildingsHelper::Install (wifiApNode);
 
-//	NS_LOG_UNCOND ("Randomly allocating wifiApNode inside the boxArea");
-//	MobilityHelper apMobility;
-//	Ptr<PositionAllocator> apPositionAlloc;
-//	apPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	Ptr<UniformRandomVariable> xVal = CreateObject<UniformRandomVariable> ();
-//	xVal->SetAttribute ("Min", DoubleValue (boxArea.xMin));
-//	xVal->SetAttribute ("Max", DoubleValue (boxArea.xMax));
-//	apPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-//	Ptr<UniformRandomVariable> yVal = CreateObject<UniformRandomVariable> ();
-//	yVal->SetAttribute ("Min", DoubleValue (boxArea.yMin));
-//	yVal->SetAttribute ("Max", DoubleValue (boxArea.yMax));
-//	apPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-//	Ptr<UniformRandomVariable> zVal = CreateObject<UniformRandomVariable> ();
-//	zVal->SetAttribute ("Min", DoubleValue (boxArea.zMin));
-//	zVal->SetAttribute ("Max", DoubleValue (boxArea.zMax));
-//	apPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-//	apMobility.SetPositionAllocator (apPositionAlloc);
-//	apMobility.Install (wifiApNode);
-//	BuildingsHelper::Install (wifiApNode);
-
     NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
     MobilityHelper stamobility;
     stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
     stamobility.Install (wifiStaNode);
-    double staX = -10.0 * nAcpoints;
-    for (uint32_t i = 0; i < nStations; i++)
+    double staX = -10.0;
+    for (uint32_t j = 0; j < nApoints; j++)
     {
-		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (staX+i, 10.0, 0.0));
-		wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
+    	for (uint32_t i = 0; i < nStations; i++)
+    	{
+    		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (staX, 10.0, 0.0));
+    		wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
+    	}
+		staX+=-20.0;
     }
     BuildingsHelper::Install (wifiStaNode);
-
-//	NS_LOG_UNCOND ("Randomly allocating wifiStaNode inside the boxArea");
-//	MobilityHelper stamobility;
-//	stamobility.SetMobilityModel ("ns3::SteadyStateRandomWaypointMobilityModel");
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinX", 		DoubleValue (boxArea.xMin));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxX", 		DoubleValue (boxArea.xMax));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinY", 		DoubleValue (boxArea.yMin));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxY", 		DoubleValue (boxArea.yMax));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::Z", 			DoubleValue (0.0));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MaxSpeed", 	DoubleValue (staSpeed));
-//	Config::SetDefault ("ns3::SteadyStateRandomWaypointMobilityModel::MinSpeed", 	DoubleValue (staSpeed));
-//	Ptr<PositionAllocator> ueRandomPositionAlloc = CreateObject<RandomRoomPositionAllocator> ();
-//	ueRandomPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	stamobility.SetPositionAllocator (ueRandomPositionAlloc);
-//	stamobility.Install (wifiStaNode);
-//	for (NodeContainer::Iterator it = wifiStaNode.Begin (); it != wifiStaNode.End (); ++it)
-//	  (*it)->Initialize ();
-//	BuildingsHelper::Install (wifiStaNode);
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -434,22 +412,22 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Create  RemoteHost LTE");
 	////////////////////////////////////////////////
 
-	NodeContainer remoteHostNodeLte;
-	remoteHostNodeLte.Create (1);
-	Ptr<Node> remoteHostLTE = remoteHostNodeLte.Get (0);
-	internet.Install (remoteHostNodeLte);
+	NodeContainer remoteHostContainerLte;
+	remoteHostContainerLte.Create (1);
+	Ptr<Node> remoteHostLTE = remoteHostContainerLte.Get (0);
+	internet.Install (remoteHostContainerLte);
 
 	p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (dataRate)));
 	p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (p2pLinkDelay)));
 	p2ph.SetDeviceAttribute ("Mtu", UintegerValue (mtu));
 	lteDevice = p2ph.Install (pgw, remoteHostLTE);
 
-	ipv4.SetBase ("10.0.0.0", "255.0.0.0");
+	ipv4.SetBase (ipRemoteHostLte, netMask);
 	Ipv4InterfaceContainer internetIpIfaces = ipv4.Assign (lteDevice);
 	//Ipv4Address remoteHostAddr = internetIpIfaces.GetAddress (1); //for upload only
 
 	remoteHostStaticRouting = ipv4RoutingHelper.GetStaticRouting (remoteHostLTE->GetObject<Ipv4> ());
-	remoteHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
+	remoteHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask (netMask), 1);
 
 	////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Creating Mobility Models LTE");
@@ -462,8 +440,8 @@ int main (int argc, char *argv[])
 	rhPositionAllocLTE->Add (Vector (lteVerticalPosition, -40.0, 0.0));
 	rhmobilityLTE.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobilityLTE.SetPositionAllocator(rhPositionAllocLTE);
-	rhmobilityLTE.Install(remoteHostNodeLte);
-	BuildingsHelper::Install (remoteHostNodeLte);
+	rhmobilityLTE.Install(remoteHostContainerLte);
+	BuildingsHelper::Install (remoteHostContainerLte);
 
 	NS_LOG_UNCOND ("Installing mobility on PGW");
 	MobilityHelper pgwmobility;
@@ -489,26 +467,6 @@ int main (int argc, char *argv[])
 	enbMobility.SetPositionAllocator(enbPositionAlloc);
 	enbMobility.Install(enbNodes);
 	BuildingsHelper::Install (enbNodes);
-
-//	NS_LOG_UNCOND ("Randomly allocating enbNodes inside the boxArea LTE");
-//	MobilityHelper enbMobility;
-//	Ptr<PositionAllocator> enbPositionAlloc;
-//	enbPositionAlloc = CreateObject<RandomBoxPositionAllocator> ();
-//	Ptr<UniformRandomVariable> xVal1 = CreateObject<UniformRandomVariable> ();
-//	xVal1->SetAttribute ("Min", DoubleValue (boxArea.xMin));
-//	xVal1->SetAttribute ("Max", DoubleValue (boxArea.xMax));
-//	enbPositionAlloc->SetAttribute ("X", PointerValue (xVal));
-//	Ptr<UniformRandomVariable> yVal1 = CreateObject<UniformRandomVariable> ();
-//	yVal1->SetAttribute ("Min", DoubleValue (boxArea.yMin));
-//	yVal1->SetAttribute ("Max", DoubleValue (boxArea.yMax));
-//	enbPositionAlloc->SetAttribute ("Y", PointerValue (yVal));
-//	Ptr<UniformRandomVariable> zVal1 = CreateObject<UniformRandomVariable> ();
-//	zVal1->SetAttribute ("Min", DoubleValue (boxArea.zMin));
-//	zVal1->SetAttribute ("Max", DoubleValue (boxArea.zMax));
-//	enbPositionAlloc->SetAttribute ("Z", PointerValue (zVal));
-//	enbMobility.SetPositionAllocator (enbPositionAlloc);
-//	enbMobility.Install (enbNodes);
-//	BuildingsHelper::Install (enbNodes);
 
 ////////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Installing  Devices to the nodes LTE");
@@ -544,13 +502,24 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 
-	double startLteApp=8.0;
+	double startLteApp=0.0;
+
+	if(nApoints==1)
+		startLteApp=8.0;
+	else if(nApoints==2)
+		startLteApp=16.0;
+	else if(nApoints==3)
+		startLteApp=31.0;
+	else
+		NS_ASSERT (simulationTime > startLteApp);
+
+	//to use LTE simulation time has to be higher than startLteApp
+	NS_ASSERT (simulationTime > startLteApp);
+
 	lteHelper->AddX2Interface (enbNodes);
 
-	startAppWifi(wifiStaNode,remoteHost, wifiStaInterface, startLteApp);
-	startAppLTE(wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs, startLteApp);
-	//Simulator::Schedule(Seconds(1), &startAppWifi, wifiStaNode,remoteHost, wifiStaInterface);
-	//Simulator::Schedule(Seconds(startLteApp), &startAppLTE, wifiStaNode, remoteHostLTE, ueIpIface, lteHelper, staDevs);
+	startAppWifi(wifiStaNode,remoteHostContainerWifi, wifiStaInterface, startLteApp);
+	startAppLTE(wifiStaNode, remoteHostContainerLte, ueIpIface, lteHelper, staDevs, startLteApp);
 
 	for(uint32_t i=0; i < nEnb; i++)
 	{
@@ -617,7 +586,7 @@ int main (int argc, char *argv[])
 	plotFile.close ();
 
 	std::cout << std::endl;
-	std::cout << "==========TIMES========== " << "\n";
+	std::cout << "==========TIMERS========= " << "\n";
 	std::cout << "Simulation time: " << Simulator::Now().GetSeconds () << " secs\n";
 	std::cout << "GNU Plot time: " << simulationTime << " secs\n";
 
@@ -628,16 +597,16 @@ int main (int argc, char *argv[])
 	std::cout << "Real time: " << tempoTotal << " secs ~ " << (uint32_t)tempoTotal / 60 << " min\n";
 
 	if(showConf)
-		showConfigs(nEnb, nAcpoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
+		showConfigs(nEnb, nApoints, nStations, staSpeed, useFemtocells, nFemtocells, dataRate, packetSize, boxArea, simulationTime);
 
 	return 0;
 }
 
-void showConfigs(uint32_t nEnb,uint32_t nAcpoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
+void showConfigs(uint32_t nEnb,uint32_t nApoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
 				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
 {
 	std::cout << "==========CONFIGS======== " << "\n";
-	std::cout << "Access points: " << nAcpoints << "\n";
+	std::cout << "Access points: " << nApoints << "\n";
 	std::cout << "Stations: " << nStations << "\n";
 	std::cout << "Enb: " << nEnb << "\n";
 	std::cout << "Station Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
@@ -748,7 +717,7 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet);
 }
 
-void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4InterfaceContainer wifiStaInterface, double startLteApp)
+void startAppWifi(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi, Ipv4InterfaceContainer wifiStaInterface, double startLteApp)
 {
 	ApplicationContainer appSourceWifi, appSinkWifi;
 
@@ -756,7 +725,7 @@ void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4Interface
 	{
 		NS_LOG_UNCOND ("Initializing apps WIFI on node " << i);
 		OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(i), appPort)));
-		appSourceWifi = onOffHelperWifi.Install (remoteHost);
+		appSourceWifi = onOffHelperWifi.Install (remoteHostContainerWifi.Get (i));
 		PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
 		appSinkWifi = sink.Install (wifiStaNode.Get(i));
 
@@ -770,7 +739,7 @@ void startAppWifi(NodeContainer wifiStaNode, Ptr<Node> remoteHost, Ipv4Interface
 	appSinkWifi.Stop (Seconds (startLteApp));
 }
 
-void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4InterfaceContainer ueIpIface,
+void startAppLTE(NodeContainer wifiStaNode, NodeContainer remoteHostContainerLte, Ipv4InterfaceContainer ueIpIface,
 				Ptr<LteHelper> lteHelper, NetDeviceContainer staDevs, double startLteApp)
 {
 	ApplicationContainer appSourceLTE, appSinkLTE;
@@ -779,7 +748,7 @@ void startAppLTE(NodeContainer wifiStaNode, Ptr<Node> remoteHostLTE, Ipv4Interfa
 	{
 		NS_LOG_UNCOND ("Initializing apps LTE on node " << i);
 		OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(i), appPort)));
-		appSourceLTE = onOffHelperLTE.Install (remoteHostLTE);
+		appSourceLTE = onOffHelperLTE.Install (remoteHostContainerLte.Get(i));
 		PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
 		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(i));
 
