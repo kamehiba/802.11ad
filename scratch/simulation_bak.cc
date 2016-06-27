@@ -127,7 +127,7 @@ double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0; 	// m/s.
 
 uint32_t nEnb	 					= 1; 	// Enb
-uint32_t nApoints 					= 1; 	// Access Points
+uint32_t nApoints 					= 3; 	// Access Points
 uint32_t nStations 					= 1;	// Stations
 
 std::string outFileName				= "debug";
@@ -602,20 +602,6 @@ int main (int argc, char *argv[])
 	return 0;
 }
 
-void showConfigs(uint32_t nEnb,uint32_t nApoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
-				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
-{
-	std::cout << "==========CONFIGS======== " << "\n";
-	std::cout << "Access points: " << nApoints << "\n";
-	std::cout << "Stations: " << nStations << "\n";
-	std::cout << "Enb: " << nEnb << "\n";
-	std::cout << "Station Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
-	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
-	std::cout << "DataRate: " << dataRate << "\n";
-	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
-	std::cout << "========================= " << "\n";
-}
-
 void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet)
 {
 	double x=0.0, y=0.0;
@@ -782,4 +768,18 @@ void calcDistance(NodeContainer wifiApNode, NodeContainer wifiStaNode, NodeConta
 
 	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
 	staDistanceAp = staNode->GetDistanceFrom (apNode);
+}
+
+void showConfigs(uint32_t nEnb,uint32_t nApoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
+				std::string dataRate, uint32_t packetSize, Box boxArea, double simulationTime)
+{
+	std::cout << "==========CONFIGS======== " << "\n";
+	std::cout << "Access points: " << nApoints << "\n";
+	std::cout << "Stations: " << nStations << "\n";
+	std::cout << "Enb: " << nEnb << "\n";
+	std::cout << "Station Speed: " << staSpeed << "m/s" << " <> " << staSpeed*3.6 << "km/h\n";
+	useFemtocells == true ? std::cout << "Femtocells: " << nFemtocells << "\n" : std::cout << "Femtocells Disabled\n";
+	std::cout << "DataRate: " << dataRate << "\n";
+	std::cout << "Area: " << (boxArea.xMax - boxArea.xMin) * (boxArea.yMax - boxArea.yMin) << "m²\n";
+	std::cout << "========================= " << "\n";
 }
