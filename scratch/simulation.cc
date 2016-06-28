@@ -356,7 +356,7 @@ int main (int argc, char *argv[])
 	double roX=wifiVerticalPosition;
 	for(uint32_t i=0; i<wifiApNode.GetN();i++)
 	{
-		routerPositionAlloc->Add (Vector (roX, -20.0, 0.0));
+		routerPositionAlloc->Add (Vector (roX, -10.0, 0.0));
 		roX+=-20;
 	}
 	routermobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -439,7 +439,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobilityLTE;
 	Ptr<ListPositionAllocator> rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
 	rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
-	rhPositionAllocLTE->Add (Vector (lteVerticalPosition, -40.0, 0.0));
+	rhPositionAllocLTE->Add (Vector (lteVerticalPosition, -50.0, 0.0));
 	rhmobilityLTE.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobilityLTE.SetPositionAllocator(rhPositionAllocLTE);
 	rhmobilityLTE.Install(remoteHostContainerLte);
@@ -462,7 +462,7 @@ int main (int argc, char *argv[])
 	double enbX=lteVerticalPosition;
 	for(uint32_t i=0;i<enbNodes.GetN();i++)
 	{
-		enbPositionAlloc->Add (Vector (enbX, -10.0, 0.0));
+		enbPositionAlloc->Add (Vector (enbX, -20.0, 0.0));
 		enbX+=20.0;
 	}
 	enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
