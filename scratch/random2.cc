@@ -122,7 +122,7 @@ std::string dataRate 				= "1Mb/s";
 double staSpeed						= 2.0;		// m/s.
 uint32_t nEnb	 					= 3;		// Enb
 uint32_t nApoints 					= 3;		// Access Points
-uint32_t nStations 					= 2;		// Stations
+uint32_t nStations 					= 6;		// Stations
 
 std::string outFileName				= "random";
 std::string gnuplotFileName			= "random";
@@ -152,7 +152,7 @@ int main (int argc, char *argv[])
     Config::SetDefault ("ns3::OnOffApplication::OnTime", 		StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     Config::SetDefault ("ns3::OnOffApplication::OffTime", 		StringValue("ns3::ConstantRandomVariable[Constant=0]"));
 
-	Config::SetDefault ("ns3::StaWifiMac::MaxMissedBeacons", 	UintegerValue (1));
+	Config::SetDefault ("ns3::StaWifiMac::MaxMissedBeacons", 	UintegerValue (2));
 
 ///////////////////////////////////////////////
 	NS_LOG_UNCOND ("==> Setting Up Command Line Parameters");
@@ -364,17 +364,54 @@ int main (int argc, char *argv[])
     NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
     MobilityHelper stamobility;
 
+    /////////////////////STAT 0////////////////////////
     stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
     stamobility.Install (wifiStaNode.Get(0));
 	wifiStaNode.Get (0)->GetObject<MobilityModel> ()->SetPosition (Vector (-60, 5.0, 0.0));
 	wifiStaNode.Get (0)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
 
-	stamobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel","Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));
+	/////////////////////STAT 1////////////////////////
+	stamobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+	                             "Bounds", RectangleValue (Rectangle (-55, -45, 0, 10)),
+	                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2.0]"),
+	                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
     stamobility.Install (wifiStaNode.Get(1));
-	wifiStaNode.Get (1)->GetObject<MobilityModel> ()->SetPosition (Vector (15.0, 30.0, 0.0));
+	wifiStaNode.Get (1)->GetObject<MobilityModel> ()->SetPosition (Vector (0.0, 0.0, 0.0));
+
+	/////////////////////STAT 2////////////////////////
+	stamobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+	                             "Bounds", RectangleValue (Rectangle (-5, 5, 0, 10)),
+	                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2.0]"),
+	                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+    stamobility.Install (wifiStaNode.Get(2));
+	wifiStaNode.Get (2)->GetObject<MobilityModel> ()->SetPosition (Vector (0.0, 0.0, 0.0));
+
+	/////////////////////STAT 3////////////////////////
+	stamobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+	                             "Bounds", RectangleValue (Rectangle (45, 55, 0, 10)),
+	                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2.0]"),
+	                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+    stamobility.Install (wifiStaNode.Get(3));
+	wifiStaNode.Get (3)->GetObject<MobilityModel> ()->SetPosition (Vector (0.0, 0.0, 0.0));
 
 
 
+	/////////////////////STAT 4////////////////////////
+	stamobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+	                             "Bounds", RectangleValue (Rectangle (-50, 0, 40, 60)),
+	                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2.0]"),
+	                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+    stamobility.Install (wifiStaNode.Get(4));
+	wifiStaNode.Get (4)->GetObject<MobilityModel> ()->SetPosition (Vector (0.0, 0.0, 0.0));
+
+
+	/////////////////////STAT 5////////////////////////
+	stamobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+	                             "Bounds", RectangleValue (Rectangle (70, 100, 30, 50)),
+	                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2.0]"),
+	                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+    stamobility.Install (wifiStaNode.Get(5));
+	wifiStaNode.Get (5)->GetObject<MobilityModel> ()->SetPosition (Vector (0.0, 0.0, 0.0));
 
     BuildingsHelper::Install (wifiStaNode);
 
