@@ -15,27 +15,24 @@
  *
  * Author: Daniel D. Costa <danielcosta@inf.ufg.br>
 
- Default Network Topology
+ Network Topology With:  3802.11ad , 3Enb , 1Station
 
-	RH wifi				RH Lte
- 	 *					*
-	 -					-
-	 -					-
-	 Router				PGW
-	 *					*
-	 -					-
-	 -					-
-   	 APs				ENB
-   	 *					*
-   	 -					-
-   	 -	-			-
-   	 	 	 -
-   	 	 	 *Sta
+						RH wifi				RH Lte
+		*		*	 	*					*
+		-		-	 	-					-
+		-		-	 	-					-
+					 	 Router				PGW
+		*		*	 	*					*
+		-		-	 	-					-
+		-		-	 	-					-
+					 	 APs				ENB
+		*		*	 	*					*		*		*
+		-		-	 	-					-	-	-	-	-
+		-	-	-	- 	-	-			-
+							 	 -
+							 	 *Sta
 
 */
-
-//#include "ns3/lte-module.h"
-//#include "ns3/csma-module.h"
 
 #include "ns3/lte-helper.h"
 #include "ns3/epc-helper.h"
@@ -60,21 +57,19 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("debug");
+NS_LOG_COMPONENT_DEFINE ("random");
 
 #define color(param) printf("\033[%sm",param)
 
 //======================================================================================
 void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset);
-void calcDistance(NodeContainer,NodeContainer,NodeContainer);
-void calcDistance(Ptr<Node>,Ptr<Node>,Ptr<Node>);
 void startLteEpsBearer(Ptr<LteHelper>, Ptr<NetDevice>);
 void startApps(NodeContainer,NodeContainer,Ipv4InterfaceContainer,NodeContainer,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,NetDeviceContainer);
 void startSink(ApplicationContainer,ApplicationContainer,OnOffHelper,Ptr<Node>,double,double);
 //======================================================================================
 
-double simulationTime				= 60.0;
+double simulationTime				= 90.0;
 double appStartTime					= 0.01;
 
 //Others Vars
@@ -124,15 +119,13 @@ std::string protocol 				= "ns3::UdpSocketFactory";
 std::string dataRate 				= "1Mb/s";
 
 //Nodes Vars
-double wifiVerticalPosition			= 0.0;
-double lteVerticalPosition			= 20.0;
 double staSpeed						= 2.0;		// m/s.
-
 uint32_t nEnb	 					= 3;		// Enb
 uint32_t nApoints 					= 3;		// Access Points
-uint32_t nStations 					= 1;		// Stations
+uint32_t nStations 					= 2;		// Stations
 
-std::string outFileName				= "debug";
+std::string outFileName				= "random";
+std::string gnuplotFileName			= "random";
 
 NodeContainer remoteHostContainerWifi, routerContainerWifi, wifiApNode, wifiStaNode, enbNodes, remoteHostContainerLte;
 
@@ -159,8 +152,6 @@ int main (int argc, char *argv[])
     Config::SetDefault ("ns3::OnOffApplication::OnTime", 		StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     Config::SetDefault ("ns3::OnOffApplication::OffTime", 		StringValue("ns3::ConstantRandomVariable[Constant=0]"));
 
-	//Config::SetDefault ("ns3::StaWifiMac::ProbeRequestTimeout", StringValue ("0.01"));
-	//Config::SetDefault ("ns3::StaWifiMac::AssocRequestTimeout", StringValue ("0.01"));
 	Config::SetDefault ("ns3::StaWifiMac::MaxMissedBeacons", 	UintegerValue (1));
 
 ///////////////////////////////////////////////
@@ -189,7 +180,7 @@ int main (int argc, char *argv[])
 
 	NS_ASSERT (nEnb > 0 && nEnb < 4);
 	NS_ASSERT (nApoints > 0 && nApoints < 4);
-	NS_ASSERT (nStations > 0 && nStations < 2);
+	NS_ASSERT (nStations > 0 && nStations < 9);
 	NS_ASSERT (nFemtocells > 0);
 	NS_ASSERT (appStartTime < simulationTime);
 
@@ -338,12 +329,9 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobility;
 	Ptr<ListPositionAllocator> rhPositionAlloc = CreateObject<ListPositionAllocator> ();
 	rhPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double rhX=wifiVerticalPosition;
-	for(uint32_t i=0; i<wifiApNode.GetN();i++)
-	{
-		rhPositionAlloc->Add (Vector (rhX, -40.0, 0.0));
-		rhX+=-20;
-	}
+	rhPositionAlloc->Add (Vector (0.0, -40.0, 0.0));
+	rhPositionAlloc->Add (Vector (50, -40.0, 0.0));
+	rhPositionAlloc->Add (Vector (-50, -40.0, 0.0));
 	rhmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobility.SetPositionAllocator(rhPositionAlloc);
 	rhmobility.Install(remoteHostContainerWifi);
@@ -353,12 +341,9 @@ int main (int argc, char *argv[])
 	MobilityHelper routermobility;
 	Ptr<ListPositionAllocator> routerPositionAlloc = CreateObject<ListPositionAllocator> ();
 	routerPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double roX=wifiVerticalPosition;
-	for(uint32_t i=0; i<wifiApNode.GetN();i++)
-	{
-		routerPositionAlloc->Add (Vector (roX, -10.0, 0.0));
-		roX+=-20;
-	}
+	routerPositionAlloc->Add (Vector (0.0, -10.0, 0.0));
+	routerPositionAlloc->Add (Vector (50, -10.0, 0.0));
+	routerPositionAlloc->Add (Vector (-50, -10.0, 0.0));
 	routermobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	routermobility.SetPositionAllocator(routerPositionAlloc);
 	routermobility.Install(routerContainerWifi);
@@ -368,12 +353,9 @@ int main (int argc, char *argv[])
 	MobilityHelper apMobility;
 	Ptr<ListPositionAllocator> apPositionAlloc = CreateObject<ListPositionAllocator> ();
 	apPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double apX=wifiVerticalPosition;
-	for(uint32_t i=0; i<wifiApNode.GetN();i++)
-	{
-		apPositionAlloc->Add (Vector (apX, 0.0, 0.0));
-		apX+=-20;
-	}
+	apPositionAlloc->Add (Vector (0.0, 0.0, 0.0));
+	apPositionAlloc->Add (Vector (50, 0.0, 0.0));
+	apPositionAlloc->Add (Vector (-50, 0.0, 0.0));
 	apMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	apMobility.SetPositionAllocator(apPositionAlloc);
 	apMobility.Install(wifiApNode);
@@ -381,18 +363,19 @@ int main (int argc, char *argv[])
 
     NS_LOG_UNCOND ("Installing mobility on wifiStaNode");
     MobilityHelper stamobility;
+
     stamobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
-    stamobility.Install (wifiStaNode);
-    double staX = -10.0;
-    for (uint32_t j = 0; j < nApoints; j++)
-    {
-    	for (uint32_t i = 0; i < nStations; i++)
-    	{
-    		wifiStaNode.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (staX, 5.0, 0.0));
-    		wifiStaNode.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
-    	}
-		staX+=-20.0;
-    }
+    stamobility.Install (wifiStaNode.Get(0));
+	wifiStaNode.Get (0)->GetObject<MobilityModel> ()->SetPosition (Vector (-60, 5.0, 0.0));
+	wifiStaNode.Get (0)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (staSpeed, 0, 0));
+
+	stamobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel","Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));
+    stamobility.Install (wifiStaNode.Get(1));
+	wifiStaNode.Get (1)->GetObject<MobilityModel> ()->SetPosition (Vector (15.0, 30.0, 0.0));
+
+
+
+
     BuildingsHelper::Install (wifiStaNode);
 
 ///////////////////////////////////////////////
@@ -439,7 +422,7 @@ int main (int argc, char *argv[])
 	MobilityHelper rhmobilityLTE;
 	Ptr<ListPositionAllocator> rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
 	rhPositionAllocLTE = CreateObject<ListPositionAllocator> ();
-	rhPositionAllocLTE->Add (Vector (lteVerticalPosition, -50.0, 0.0));
+	rhPositionAllocLTE->Add (Vector (-100, 20.0, 0.0));
 	rhmobilityLTE.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	rhmobilityLTE.SetPositionAllocator(rhPositionAllocLTE);
 	rhmobilityLTE.Install(remoteHostContainerLte);
@@ -449,7 +432,7 @@ int main (int argc, char *argv[])
 	MobilityHelper pgwmobility;
 	Ptr<ListPositionAllocator> pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
 	pgwPositionAlloc = CreateObject<ListPositionAllocator> ();
-	pgwPositionAlloc->Add (Vector (lteVerticalPosition, -20.0, 0.0));
+	pgwPositionAlloc->Add (Vector (-30, 20.0, 0.0));
 	pgwmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	pgwmobility.SetPositionAllocator(pgwPositionAlloc);
 	pgwmobility.Install(pgw);
@@ -459,12 +442,9 @@ int main (int argc, char *argv[])
 	MobilityHelper enbMobility;
 	Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
 	enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-	double enbX=lteVerticalPosition;
-	for(uint32_t i=0;i<enbNodes.GetN();i++)
-	{
-		enbPositionAlloc->Add (Vector (enbX, -20.0, 0.0));
-		enbX+=20.0;
-	}
+	enbPositionAlloc->Add (Vector (-30, 20.0, 0.0));
+	enbPositionAlloc->Add (Vector (30,  20.0, 0.0));
+	enbPositionAlloc->Add (Vector (90,  20.0, 0.0));
 	enbMobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	enbMobility.SetPositionAllocator(enbPositionAlloc);
 	enbMobility.Install(enbNodes);
@@ -481,7 +461,6 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Installing the IP stack on the UEs LTE");
 //////////////////////////////////////////
 
-	//internet.Install (wifiStaNode);
 	Ipv4InterfaceContainer ueIpIface;
 	ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (staDevs));
 
@@ -533,9 +512,8 @@ int main (int argc, char *argv[])
 		//anim.SetConstantPosition (ueNode, 0.0, 0.0);
 	}
 
-	std::string fileNameWithNoExtension = "gnuplot";
-	std::string graphicsFileName        = fileNameWithNoExtension + ".png";
-	std::string plotFileName            = fileNameWithNoExtension + ".plt";
+	std::string graphicsFileName        = gnuplotFileName + ".png";
+	std::string plotFileName            = gnuplotFileName + ".plt";
 	std::string plotTitle               = "Flow vs Throughput";
 	std::string dataTitle               = "Throughput (Mbps)";
 
@@ -592,8 +570,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 	{
 		for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 		{
-			//calcDistance(wifiApNode,wifiStaNode,enbNodes);
-
 			Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
 
 			difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
@@ -638,8 +614,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-					//std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-					//std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 					y = (double) txOffered;
@@ -664,8 +638,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-					//std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-					//std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 					y = (double) throughput;
@@ -697,52 +669,20 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 	PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
 	appSinkLTE = sinkLTE.Install (wifiStaNode.Get(0));
 
-	if(nApoints==1)
-	{
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), appStartTime, 1.0);
-		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 8.0, simulationTime);
-		startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi, 	remoteHostContainerWifi.Get(2), 	appStartTime, 10.0);
+	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE, 	remoteHostContainerLte.Get(0), 		10.0, 24.0);
 
-		if(nEnb==2)
-			lteHelper->HandoverRequest (Seconds (25.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-		if(nEnb==3)
-		{
-			lteHelper->HandoverRequest (Seconds (23.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-			lteHelper->HandoverRequest (Seconds (33.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
-		}
-	}
-	else if(nApoints==2)
-	{
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(1), appStartTime, 10.0);
-		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 10.0, 17.0);
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), 17.0, 21.0);
-		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 21.0, simulationTime);
-		startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi, 	remoteHostContainerWifi.Get(0), 	24.0, 35.0);
+	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE, 	remoteHostContainerLte.Get(0), 		35.0, 49.0);
 
-		if(nEnb==2)
-			lteHelper->HandoverRequest (Seconds (31.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-		if(nEnb==3)
-		{
-			lteHelper->HandoverRequest (Seconds (31.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-			lteHelper->HandoverRequest (Seconds (40.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
-		}
-	}
-	else if(nApoints==3)
-	{
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(2), appStartTime, 10.0);
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(1), 10.0, 20.0);
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), 20.0, 27.0);
-		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 27.0, simulationTime);
-		startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startLteEpsBearer(lteHelper, staDevs.Get(0));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi, 	remoteHostContainerWifi.Get(1), 	49.0, 58.0);
+	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE, 	remoteHostContainerLte.Get(0), 		58.0, simulationTime);
 
-		if(nEnb==2)
-			lteHelper->HandoverRequest (Seconds (41), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-		if(nEnb==3)
-		{
-			lteHelper->HandoverRequest (Seconds (41.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
-			lteHelper->HandoverRequest (Seconds (50.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
-		}
-	}
+	lteHelper->HandoverRequest (Seconds (35.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
+	lteHelper->HandoverRequest (Seconds (58.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
 }
 
 void startSink(ApplicationContainer appSource, ApplicationContainer appSink,OnOffHelper onOffHelper,
@@ -753,26 +693,6 @@ void startSink(ApplicationContainer appSource, ApplicationContainer appSink,OnOf
 	appSink.Start (Seconds (startTime));
 	appSource.Stop (Seconds (endTime));
 	appSink.Stop (Seconds (endTime));
-}
-
-void calcDistance(Ptr<Node> wifiApNode, Ptr<Node> wifiStaNode, Ptr<Node> enbNodes)
-{
-	Ptr<MobilityModel> enbNode = enbNodes->GetObject<MobilityModel>();
-	Ptr<MobilityModel> apNode = wifiApNode->GetObject<MobilityModel>();
-	Ptr<MobilityModel> staNode = wifiStaNode->GetObject<MobilityModel>();
-
-	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
-	staDistanceAp = staNode->GetDistanceFrom (apNode);
-}
-
-void calcDistance(NodeContainer wifiApNode, NodeContainer wifiStaNode, NodeContainer enbNodes)
-{
-	Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
-	Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
-	Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-
-	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
-	staDistanceAp = staNode->GetDistanceFrom (apNode);
 }
 
 void showConfigs(uint32_t nEnb,uint32_t nApoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,

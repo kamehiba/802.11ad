@@ -15,27 +15,24 @@
  *
  * Author: Daniel D. Costa <danielcosta@inf.ufg.br>
 
- Default Network Topology
+ Network Topology With:  3802.11ad , 3Enb , 1Station
 
-	RH wifi				RH Lte
- 	 *					*
-	 -					-
-	 -					-
-	 Router				PGW
-	 *					*
-	 -					-
-	 -					-
-   	 APs				ENB
-   	 *					*
-   	 -					-
-   	 -	-			-
-   	 	 	 -
-   	 	 	 *Sta
+						RH wifi				RH Lte
+		*		*	 	*					*
+		-		-	 	-					-
+		-		-	 	-					-
+					 	 Router				PGW
+		*		*	 	*					*
+		-		-	 	-					-
+		-		-	 	-					-
+					 	 APs				ENB
+		*		*	 	*					*		*		*
+		-		-	 	-					-	-	-	-	-
+		-	-	-	- 	-	-			-
+							 	 -
+							 	 *Sta
 
 */
-
-//#include "ns3/lte-module.h"
-//#include "ns3/csma-module.h"
 
 #include "ns3/lte-helper.h"
 #include "ns3/epc-helper.h"
@@ -60,15 +57,13 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("debug");
+NS_LOG_COMPONENT_DEFINE ("sequence");
 
 #define color(param) printf("\033[%sm",param)
 
 //======================================================================================
 void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
 void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset);
-void calcDistance(NodeContainer,NodeContainer,NodeContainer);
-void calcDistance(Ptr<Node>,Ptr<Node>,Ptr<Node>);
 void startLteEpsBearer(Ptr<LteHelper>, Ptr<NetDevice>);
 void startApps(NodeContainer,NodeContainer,Ipv4InterfaceContainer,NodeContainer,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,NetDeviceContainer);
 void startSink(ApplicationContainer,ApplicationContainer,OnOffHelper,Ptr<Node>,double,double);
@@ -115,7 +110,7 @@ bool use2DAntenna					= true;
 uint32_t wifiChannelNumber			= 1;
 uint32_t nTxAntennas 				= 1;
 uint32_t nRxAntennas				= 1;
-uint32_t maxAmsduSize				= 999999;
+uint32_t maxAmsduSize				= 999999;	//262143;
 
 //APP Vars
 uint32_t packetSize					= 1472;
@@ -132,7 +127,8 @@ uint32_t nEnb	 					= 3;		// Enb
 uint32_t nApoints 					= 3;		// Access Points
 uint32_t nStations 					= 1;		// Stations
 
-std::string outFileName				= "debug";
+std::string outFileName				= "sequence";
+std::string gnuplotFileName			= "sequence";
 
 NodeContainer remoteHostContainerWifi, routerContainerWifi, wifiApNode, wifiStaNode, enbNodes, remoteHostContainerLte;
 
@@ -159,8 +155,8 @@ int main (int argc, char *argv[])
     Config::SetDefault ("ns3::OnOffApplication::OnTime", 		StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     Config::SetDefault ("ns3::OnOffApplication::OffTime", 		StringValue("ns3::ConstantRandomVariable[Constant=0]"));
 
-	//Config::SetDefault ("ns3::StaWifiMac::ProbeRequestTimeout", StringValue ("0.01"));
-	//Config::SetDefault ("ns3::StaWifiMac::AssocRequestTimeout", StringValue ("0.01"));
+	Config::SetDefault ("ns3::StaWifiMac::ProbeRequestTimeout", StringValue ("0.01"));
+	Config::SetDefault ("ns3::StaWifiMac::AssocRequestTimeout", StringValue ("0.01"));
 	Config::SetDefault ("ns3::StaWifiMac::MaxMissedBeacons", 	UintegerValue (1));
 
 ///////////////////////////////////////////////
@@ -533,9 +529,8 @@ int main (int argc, char *argv[])
 		//anim.SetConstantPosition (ueNode, 0.0, 0.0);
 	}
 
-	std::string fileNameWithNoExtension = "gnuplot";
-	std::string graphicsFileName        = fileNameWithNoExtension + ".png";
-	std::string plotFileName            = fileNameWithNoExtension + ".plt";
+	std::string graphicsFileName        = gnuplotFileName + ".png";
+	std::string plotFileName            = gnuplotFileName + ".plt";
 	std::string plotTitle               = "Flow vs Throughput";
 	std::string dataTitle               = "Throughput (Mbps)";
 
@@ -592,8 +587,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 	{
 		for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i)
 		{
-			//calcDistance(wifiApNode,wifiStaNode,enbNodes);
-
 			Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
 
 			difftx = i->second.timeLastTxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds();
@@ -638,8 +631,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-					//std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-					//std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 					y = (double) txOffered;
@@ -664,8 +655,6 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 					std::cout << "  JitterSum: " 		<< i->second.jitterSum 				<< "\n";
 					std::cout << "  Throughput: " 		<< throughput 						<< " Mbps\n\n";
 
-					//std::cout << "  Distance from AP: " << staDistanceAp					<< "\n";
-					//std::cout << "  Distance from Enb: "<< staDistanceEnb 					<< "\n";
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
 					y = (double) throughput;
@@ -699,7 +688,7 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 
 	if(nApoints==1)
 	{
-		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), appStartTime, 1.0);
+		startSink(appSourceWifi, appSinkWifi, onOffHelperWifi, remoteHostContainerWifi.Get(0), appStartTime, 8.0);
 		startSink(appSourceLTE, appSinkLTE, onOffHelperLTE, remoteHostContainerLte.Get(0), 8.0, simulationTime);
 		startLteEpsBearer(lteHelper, staDevs.Get(0));
 
@@ -753,26 +742,6 @@ void startSink(ApplicationContainer appSource, ApplicationContainer appSink,OnOf
 	appSink.Start (Seconds (startTime));
 	appSource.Stop (Seconds (endTime));
 	appSink.Stop (Seconds (endTime));
-}
-
-void calcDistance(Ptr<Node> wifiApNode, Ptr<Node> wifiStaNode, Ptr<Node> enbNodes)
-{
-	Ptr<MobilityModel> enbNode = enbNodes->GetObject<MobilityModel>();
-	Ptr<MobilityModel> apNode = wifiApNode->GetObject<MobilityModel>();
-	Ptr<MobilityModel> staNode = wifiStaNode->GetObject<MobilityModel>();
-
-	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
-	staDistanceAp = staNode->GetDistanceFrom (apNode);
-}
-
-void calcDistance(NodeContainer wifiApNode, NodeContainer wifiStaNode, NodeContainer enbNodes)
-{
-	Ptr<MobilityModel> enbNode = enbNodes.Get(0)->GetObject<MobilityModel>();
-	Ptr<MobilityModel> apNode = wifiApNode.Get(0)->GetObject<MobilityModel>();
-	Ptr<MobilityModel> staNode = wifiStaNode.Get(0)->GetObject<MobilityModel>();
-
-	staDistanceEnb = staNode->GetDistanceFrom (enbNode);
-	staDistanceAp = staNode->GetDistanceFrom (apNode);
 }
 
 void showConfigs(uint32_t nEnb,uint32_t nApoints, uint32_t nStations, double staSpeed, bool useFemtocells, uint32_t nFemtocells,
