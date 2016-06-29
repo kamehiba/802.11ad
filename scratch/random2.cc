@@ -695,16 +695,20 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 				NetDeviceContainer staDevs, NetDeviceContainer enbDevs)
 {
 	ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
-
-	NS_LOG_UNCOND ("Initializing apps WIFI");
 	OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(0), appPort)));
-	PacketSinkHelper sink (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-	appSinkWifi = sink.Install (wifiStaNode.Get(0));
-
-	NS_LOG_UNCOND ("Initializing apps LTE");
 	OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(0), appPort)));
-	PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-	appSinkLTE = sinkLTE.Install (wifiStaNode.Get(0));
+
+	for (uint32_t u = 0; u < nStations; ++u)
+	{
+		NS_LOG_UNCOND ("Initializing apps WIFI");
+
+		PacketSinkHelper sinkWifi (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+		appSinkWifi = sinkWifi.Install (wifiStaNode.Get(u));
+
+		NS_LOG_UNCOND ("Initializing apps LTE");
+		PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(u));
+	}
 
 	startLteEpsBearer(lteHelper, staDevs.Get(0));
 	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi, 	remoteHostContainerWifi.Get(2), 	appStartTime, 10.0);
@@ -720,6 +724,18 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 
 	lteHelper->HandoverRequest (Seconds (35.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
 	lteHelper->HandoverRequest (Seconds (58.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 void startSink(ApplicationContainer appSource, ApplicationContainer appSink,OnOffHelper onOffHelper,
