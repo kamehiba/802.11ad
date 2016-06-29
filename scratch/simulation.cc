@@ -65,7 +65,7 @@ NS_LOG_COMPONENT_DEFINE ("simulation");
 
 //======================================================================================
 void showConfigs(uint32_t,uint32_t,uint32_t,double,bool,uint32_t,std::string,uint32_t,Box,double);
-void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset,Ipv4InterfaceContainer,Ipv4Address);
+void flowmonitorOutput(Ptr<FlowMonitor>,FlowMonitorHelper*,Gnuplot2dDataset,Ipv4InterfaceContainer,Ipv4InterfaceContainer);
 void startLteEpsBearer(Ptr<LteHelper>, Ptr<NetDevice>);
 void startApps(NodeContainer,NodeContainer,Ipv4InterfaceContainer,NodeContainer,Ipv4InterfaceContainer,Ptr<LteHelper>,NetDeviceContainer,NetDeviceContainer);
 void startSink(ApplicationContainer,ApplicationContainer,OnOffHelper,Ptr<Node>,double,double);
@@ -121,9 +121,10 @@ std::string protocol 				= "ns3::UdpSocketFactory";
 std::string dataRate 				= "1Mb/s";
 
 //Nodes Vars
-Ipv4Address gnuplotDataNodeIP		= "3.0.0.4";
-double walkingStaSpeed				= 10.0;		// m/s.
+Ipv4Address gnuplotDataNodeWifiIP	= "3.0.0.4";
+Ipv4Address gnuplotDataNodeLteIP	= "7.0.0.2";
 std::string staticStaSpeed			= "10.0";	// m/s.
+double walkingStaSpeed				= 10.0;		// m/s.
 uint32_t nEnb	 					= 4;		// Enb
 uint32_t nApoints 					= 3;		// Access Points
 uint32_t nStations 					= 7;		// Stations
@@ -139,7 +140,7 @@ int main (int argc, char *argv[])
 	InternetStackHelper 		internet;
 	Ipv4StaticRoutingHelper 	ipv4RoutingHelper;
 	NetDeviceContainer 			remoteHostDevice, routerDevice, wifiAPDevice, wifiStaDevice, lteDevice;
-	Ipv4InterfaceContainer 		wifiStaInterface;
+	Ipv4InterfaceContainer 		wifiStaInterface, lteStaInterface;
 	Ptr<Ipv4StaticRouting> 		remoteHostStaticRouting;
 	Box 						boxArea;
 
@@ -512,8 +513,7 @@ int main (int argc, char *argv[])
 	NS_LOG_UNCOND ("==> Installing the IP stack on the UEs LTE");
 //////////////////////////////////////////
 
-	Ipv4InterfaceContainer ueIpIface;
-	ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (staDevs));
+	lteStaInterface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (staDevs));
 
 	for (uint32_t u = 0; u < nStations; ++u)
 	{
@@ -535,7 +535,7 @@ int main (int argc, char *argv[])
 /////////////////////////////////////////////////////
 
 	lteHelper->AddX2Interface (enbNodes);//x2 interface for handover
-	startApps(wifiStaNode,remoteHostContainerWifi, wifiStaInterface, remoteHostContainerLte, ueIpIface, lteHelper, staDevs, enbDevs);
+	startApps(wifiStaNode,remoteHostContainerWifi, wifiStaInterface, remoteHostContainerLte, lteStaInterface, lteHelper, staDevs, enbDevs);
 
 /////////////////////////////////////////////////////
 	color("36");
@@ -583,23 +583,41 @@ int main (int argc, char *argv[])
 	allMon->CheckForLostPackets ();
 	allMon->SerializeToXmlFile (outFileName+"_flowMonitor.xml", true, true);
 
-	bool tempFound = false;
+	bool tempWifiFound = false;
+	bool tempLteFound = false;
+
 	for (uint32_t u = 0; u < nStations; ++u)
 	{
-		if(wifiStaInterface.GetAddress(u) == gnuplotDataNodeIP)
-		{
-			flowmonitorOutput(allMon, &fmHelper, dataset, wifiStaInterface, gnuplotDataNodeIP);
-			tempFound = true;
-		}
+		if(wifiStaInterface.GetAddress(u) == gnuplotDataNodeWifiIP)
+			tempWifiFound = true;
 	}
 
-	if(!tempFound)
+	for (uint32_t u = 0; u < nEnb; ++u)
 	{
-		std::cout << "\n===> IP FOR GNUPLOT NOT FOUND!!! : " << gnuplotDataNodeIP << "\n";
+		if(lteStaInterface.GetAddress(u) == gnuplotDataNodeLteIP)
+			tempLteFound = true;
+	}
+
+
+	if(!tempWifiFound)
+	{
+		std::cout << "\n===> Wifi IP FOR GNUPLOT NOT FOUND!!! : " << gnuplotDataNodeWifiIP << "\n";
 		for (uint32_t u = 0; u < nStations; ++u)
 			std::cout << wifiStaInterface.GetAddress(u) << "\n";
+
 		return 0;
 	}
+
+	if(!tempLteFound)
+	{
+		std::cout << "\n===> LTE IP FOR GNUPLOT NOT FOUND!!! : " << gnuplotDataNodeLteIP << "\n";
+		for (uint32_t u = 0; u < nEnb; ++u)
+			std::cout << lteStaInterface.GetAddress(u) << "\n";
+
+		return 0;
+	}
+
+	flowmonitorOutput(allMon, &fmHelper, dataset, wifiStaInterface, lteStaInterface);
 
 	Simulator::Run ();
 
@@ -626,7 +644,7 @@ int main (int argc, char *argv[])
 }
 
 void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gnuplot2dDataset dataSet,
-					Ipv4InterfaceContainer wifiStaInterface, Ipv4Address gnuplotDataNodeIP)
+					Ipv4InterfaceContainer wifiStaInterface, Ipv4InterfaceContainer lteStaInterface)
 {
 	double x=0.0, y=0.0;
 	double difftx=0.0, diffrx=0.0, diffrxtx=0.0, txbitrate_value=0.0, txOffered=0.0, rxbitrate_value=0.0, delay_value=0.0, throughput=0.0;
@@ -667,7 +685,7 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 				{
 					color("31");
 					std::cout << "===========WIFI================= " << "\n";
-					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 					color("0");
 					std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
 					std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
@@ -685,14 +703,14 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
-					if (t.destinationAddress == gnuplotDataNodeIP)
+					if (t.destinationAddress == gnuplotDataNodeWifiIP)
 						y = (double) txOffered;
 				}
 				else
 				{
 					color("31");
 					std::cout << "===========LTE================= " << "\n";
-					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+					std::cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 					color("0");
 					std::cout << "  Tx Packets: " 		<< i->second.txPackets 				<< "\n";
 					std::cout << "  Tx Bytes:   " 		<< i->second.txBytes 				<< "\n";
@@ -710,7 +728,7 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 
 					std::cout << "  Average delay: " 	<< delay_value 						<< "s\n";
 
-					if (t.destinationAddress == gnuplotDataNodeIP)
+					if (t.destinationAddress == gnuplotDataNodeLteIP)
 						y = (double) throughput;
 				}
 			}
@@ -718,33 +736,33 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			{
 				if ((t.sourceAddress == "1.0.0.1" || t.sourceAddress == "1.0.0.3" || t.sourceAddress == "1.0.0.5"))
 				{
-					if (t.destinationAddress == gnuplotDataNodeIP)
+					if (t.destinationAddress == gnuplotDataNodeWifiIP)
 					{
 						color("31");
-						std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						std::cout << "===> (WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 						color("0");
 						y = (double) txOffered;
 					}
 					else
 					{
 						color("33");
-						std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 						color("0");
 					}
 				}
 				else
 				{
-					if (t.destinationAddress == gnuplotDataNodeIP)
+					if (t.destinationAddress == gnuplotDataNodeLteIP)
 					{
 						color("31");
-						std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						std::cout << "===> (LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 						color("0");
 						y = (double) throughput;
 					}
 					else
 					{
 						color("36");
-						std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs ("<< simulationTime << ")\n";
 						color("0");
 					}
 				}
@@ -754,11 +772,11 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 		}
 	}
 
-	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet, wifiStaInterface, gnuplotDataNodeIP);
+	Simulator::Schedule(Seconds(1), &flowmonitorOutput, flowMon, fmhelper, dataSet, wifiStaInterface, lteStaInterface);
 }
 
 void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi, Ipv4InterfaceContainer wifiStaInterface,
-				NodeContainer remoteHostContainerLte, Ipv4InterfaceContainer ueIpIface, Ptr<LteHelper> lteHelper,
+				NodeContainer remoteHostContainerLte, Ipv4InterfaceContainer lteStaInterface, Ptr<LteHelper> lteHelper,
 				NetDeviceContainer staDevs, NetDeviceContainer enbDevs)
 {
 	ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
@@ -770,7 +788,7 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 
 	//STAT 0 (moving)
 	OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(0), appPort)));
-	OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(0), appPort)));
+	OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (lteStaInterface.GetAddress(0), appPort)));
 	appSinkWifi = sinkWifi.Install (wifiStaNode.Get(0));
 	appSinkLTE = sinkLTE.Install (wifiStaNode.Get(0));
 
@@ -813,17 +831,17 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi3, 	remoteHostContainerWifi.Get(1), 	appStartTime, simulationTime);
 
 	//STAT 4
-	OnOffHelper onOffHelperLTE4 (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(4), appPort)));
+	OnOffHelper onOffHelperLTE4 (protocol, Address (InetSocketAddress (lteStaInterface.GetAddress(4), appPort)));
 	startLteEpsBearer(lteHelper, staDevs.Get(0));
 	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE4, 	remoteHostContainerLte.Get(0), 		appStartTime, simulationTime);
 
 	//STAT 5
-	OnOffHelper onOffHelperLTE5 (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(5), appPort)));
+	OnOffHelper onOffHelperLTE5 (protocol, Address (InetSocketAddress (lteStaInterface.GetAddress(5), appPort)));
 	startLteEpsBearer(lteHelper, staDevs.Get(0));
 	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE5, 	remoteHostContainerLte.Get(0), 		appStartTime, simulationTime);
 
 	//STAT 6
-	OnOffHelper onOffHelperLTE6 (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(6), appPort)));
+	OnOffHelper onOffHelperLTE6 (protocol, Address (InetSocketAddress (lteStaInterface.GetAddress(6), appPort)));
 	startLteEpsBearer(lteHelper, staDevs.Get(0));
 	startSink(appSourceLTE, 	appSinkLTE, 	onOffHelperLTE6, 	remoteHostContainerLte.Get(0), 		appStartTime, simulationTime);
 
