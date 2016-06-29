@@ -718,19 +718,35 @@ void flowmonitorOutput(Ptr<FlowMonitor> flowMon, FlowMonitorHelper *fmhelper, Gn
 			{
 				if ((t.sourceAddress == "1.0.0.1" || t.sourceAddress == "1.0.0.3" || t.sourceAddress == "1.0.0.5"))
 				{
-					color("31");
-					std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
-					color("0");
 					if (t.destinationAddress == gnuplotDataNodeIP)
+					{
+						color("31");
+						std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						color("0");
 						y = (double) txOffered;
+					}
+					else
+					{
+						color("33");
+						std::cout << "(WIFI) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						color("0");
+					}
 				}
 				else
 				{
-					color("36");
-					std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
-					color("0");
 					if (t.destinationAddress == gnuplotDataNodeIP)
+					{
+						color("31");
+						std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						color("0");
 						y = (double) throughput;
+					}
+					else
+					{
+						color("36");
+						std::cout << "(LTE) Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ") " << x << " secs\n";
+						color("0");
+					}
 				}
 			}
 
