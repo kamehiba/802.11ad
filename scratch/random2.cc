@@ -695,20 +695,16 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 				NetDeviceContainer staDevs, NetDeviceContainer enbDevs)
 {
 	ApplicationContainer appSourceWifi, appSinkWifi, appSourceLTE, appSinkLTE;
-	OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(0), appPort)));
 	OnOffHelper onOffHelperLTE (protocol, Address (InetSocketAddress (ueIpIface.GetAddress(0), appPort)));
 
-	for (uint32_t u = 0; u < nStations; ++u)
-	{
-		NS_LOG_UNCOND ("Initializing apps WIFI");
+	PacketSinkHelper sinkWifi (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
+	PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
 
-		PacketSinkHelper sinkWifi (protocol,Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-		appSinkWifi = sinkWifi.Install (wifiStaNode.Get(u));
 
-		NS_LOG_UNCOND ("Initializing apps LTE");
-		PacketSinkHelper sinkLTE (protocol, Address (InetSocketAddress (Ipv4Address::GetAny (), appPort)));
-		appSinkLTE = sinkLTE.Install (wifiStaNode.Get(u));
-	}
+	//STAT 0 (moving)
+	OnOffHelper onOffHelperWifi (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(0), appPort)));
+	appSinkWifi = sinkWifi.Install (wifiStaNode.Get(0));
+	appSinkLTE = sinkLTE.Install (wifiStaNode.Get(0));
 
 	startLteEpsBearer(lteHelper, staDevs.Get(0));
 	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi, 	remoteHostContainerWifi.Get(2), 	appStartTime, 10.0);
@@ -725,13 +721,20 @@ void startApps(NodeContainer wifiStaNode, NodeContainer remoteHostContainerWifi,
 	lteHelper->HandoverRequest (Seconds (35.0), staDevs.Get (0), enbDevs.Get (0), enbDevs.Get (1));
 	lteHelper->HandoverRequest (Seconds (58.0), staDevs.Get (0), enbDevs.Get (1), enbDevs.Get (2));
 
+	//STAT 1
+	OnOffHelper onOffHelperWifi1 (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(1), appPort)));
+	appSinkWifi = sinkWifi.Install (wifiStaNode.Get(1));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi1, 	remoteHostContainerWifi.Get(2), 	appStartTime, simulationTime);
 
+	//STAT 2
+	OnOffHelper onOffHelperWifi2 (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(2), appPort)));
+	appSinkWifi = sinkWifi.Install (wifiStaNode.Get(2));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi2, 	remoteHostContainerWifi.Get(0), 	appStartTime, simulationTime);
 
-
-
-
-
-
+	//STAT 3
+	OnOffHelper onOffHelperWifi3 (protocol, Address (InetSocketAddress (wifiStaInterface.GetAddress(3), appPort)));
+	appSinkWifi = sinkWifi.Install (wifiStaNode.Get(3));
+	startSink(appSourceWifi, 	appSinkWifi, 	onOffHelperWifi3, 	remoteHostContainerWifi.Get(1), 	appStartTime, simulationTime);
 
 
 
