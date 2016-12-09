@@ -19,6 +19,8 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
+#include "ns3/gnuplot-helper.h"
+#include "ns3/file-helper.h"
 
 using namespace ns3;
 
